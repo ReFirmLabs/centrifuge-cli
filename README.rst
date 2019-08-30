@@ -86,11 +86,11 @@ Querying Report Results
 
 All the following commands require access to what we refer to as a "UFID" or
 Upload File ID. This ID can be seen through the web interface, its also the last
-part of the URL when viewing a report, it is also the `id` field when running
-the `centrifuge reports list` command above. It should also be noted that all of
-these commands also support the `--outfmt` argument so you can export to CSV and
+part of the URL when viewing a report, it is also the ``id`` field when running
+the ``centrifuge reports list`` command above. It should also be noted that all of
+these commands also support the ``--outfmt`` argument so you can export to CSV and
 to JSON. However be aware that these arguments are positional in nature, you
-must supply the `--outfmt` argument between `centrifuge` and `report` on the
+must supply the ``--outfmt`` argument between ``centrifuge`` and ``report`` on the
 command line or it will not be accepted. 
 
 You can see the available commands by viewing the help output:
@@ -147,11 +147,11 @@ Get SBOM Results:
 The code analysis section is a little bit more complicated, since the data is
 more structured. To understand how to access this data you need to understand
 that when we process a firmware we must extract it first, each time we extract a
-filesystem or file container those groups of files are given an `extraction ID`
-or `EXID`. To get code analysis results for an individual file you must know the
-`EXID` and the file's `PATH` within that EXID. Luckily there is a `code-summary`
-command which will give you the data you need to find into the `code-static` and
-`code-emulated` commands.
+filesystem or file container those groups of files are given an ``extraction ID``
+or ``EXID``. To get code analysis results for an individual file you must know the
+``EXID`` and the file's ``PATH`` within that EXID. Luckily there is a ``code-summary``
+command which will give you the data you need to find into the ``code-static`` and
+``code-emulated`` commands.
  
 Get a Summary of the Code Analysis:
 
@@ -159,8 +159,8 @@ Get a Summary of the Code Analysis:
 
     $ centrifuge report --ufid=<REPORT_ID> code-summary
 
-When looking at the results above from the `code-summary` command you need to
-record the `exid` and `path` (*NOT* `fullPath`), to feed into the next two commands. 
+When looking at the results above from the ``code-summary`` command you need to
+record the ``exid`` and ``path`` (*NOT* ``fullPath``), to feed into the next two commands. 
 
 Get static code analysis results:
 
