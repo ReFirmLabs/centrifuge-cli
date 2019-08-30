@@ -12,9 +12,10 @@ jobs:
   include:
     - stage: lint
       install:
-        - pip install pycodestyle
+        - pip install pycodestyle restructuredtext_lint pygments
       script:
         - pycodestyle --ignore=E501,W504  --show-source $(find centrifuge_cli -name '*.py')
+        - rst-lint README.rst
     - stage: test
       install:
         - pip install pytest toml
