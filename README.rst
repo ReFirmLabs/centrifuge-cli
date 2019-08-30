@@ -29,11 +29,17 @@ To install the Centrifuge CLI, simply:
 
     $ pip install centrifuge-cli
 
-To query the list of available reports:
+Configure your environment:
 
 .. code-block:: bash
 
     $ export CENTRIFUGE_APIKEY=xxxx
+    $ export CENTRIFUGE_URL=https://centrifuge.refirmlabs.com # change this if you're single tenant or on-premise
+
+To query the list of available reports:
+
+.. code-block:: bash
+
     $ centrifuge reports list
 
 Under the hood the Centrifuge CLI is using python Pandas data frames to report
