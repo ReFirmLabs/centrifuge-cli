@@ -26,7 +26,7 @@ To install the Centrifuge CLI, simply:
 To query the list of available reports:
 
 .. code-block:: bash
-    
+
     $ export CENTRIFUGE_API_KEY=xxxx
     $ centrifuge reports list
 
@@ -35,17 +35,20 @@ has heirarchical structure to it, we have chosen to flatten all the results into
 or for importing into spreadsheets, etc. However the cli can also output CSV, and the original json results. For example:
 
 CSV:
+
 .. code-block:: bash
-    
+
     $ centrifuge --outfmt=csv reports list
 
 JSON:
+
 .. code-block:: bash
-    
+
     $ centrifuge --outfmt=json reports list
 
 When generating the human-readable Pandas output or when genering CSV you have the option of choosing which columns you wish to export.
 For example, to display only the original filename and model number of the firmware that was uploaded: 
+
 .. code-block:: bash
     
     $ centrifuge -foriginalFilename -fdevice reports list
