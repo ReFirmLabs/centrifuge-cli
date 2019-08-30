@@ -33,7 +33,7 @@ To query the list of available reports:
 
 .. code-block:: bash
 
-    $ export CENTRIFUGE_API_KEY=xxxx
+    $ export CENTRIFUGE_APIKEY=xxxx
     $ centrifuge reports list
 
 Under the hood the Centrifuge CLI is using python Pandas data frames to report
