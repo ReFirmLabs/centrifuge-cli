@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "centrifuge-cli"
-version = "0.1.1"
+version = "0.1.2"
 description = "A command line utility for interacting with the Centrifuge Firmware Analysis Platform's REST API."
 authors = ["Peter Eacmen <peacmen@refirmlabs.com>"]
 readme = 'README.rst'
@@ -19,9 +19,9 @@ pandas = "^0.25.1"
 [tool.poetry.dev-dependencies]
 pytest = "^3.0"
 
+[tool.poetry.scripts]
+centrifuge = "centrifuge_cli.main:cli"
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
 
-[tool.poetry.scripts]
-centrifuge = "centrifuge_cli.main:cli"

@@ -14,6 +14,11 @@ jobs:
         - pip install pycodestyle
       script:
         - pycodestyle --ignore=E501,W504  --show-source $(find centrifuge_cli -name '*.py')
+    - stage: test
+      install:
+        - pip install pytest toml
+      script:
+        - pytest
     - stage: deploy
       script:
         - echo Deploying to PyPI...
