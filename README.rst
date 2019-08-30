@@ -96,6 +96,7 @@ command line or it will not be accepted.
 You can see the available commands by viewing the help output:
 
 .. code-block:: bash
+
   $ centrifuge report --help
   Usage: centrifuge report [OPTIONS] COMMAND [ARGS]...
 

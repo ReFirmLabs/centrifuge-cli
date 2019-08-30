@@ -4,6 +4,7 @@ dist: xenial
 
 stages:
   - lint
+  - test
   - name: deploy
     if: tag IS present
 
