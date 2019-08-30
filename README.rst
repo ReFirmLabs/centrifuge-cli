@@ -1,5 +1,5 @@
-centrifuge-cli: The official Python library and CLI for Centrifuge
-==================================================================
+centrifuge-cli: The official Python CLI for Centrifuge
+=======================================================
 
 Centrifuge is an automated firmware analysis platform. It allows users to upload
 their firmware images to be analyzed for various security issues. This utility
