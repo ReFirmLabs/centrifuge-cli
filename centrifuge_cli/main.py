@@ -278,7 +278,6 @@ def new(cli, email, password, orgid, admin, expires, no_expire):
         'isPermanent': isPermanent,
         'expiresAt': expiresAt}
 
-    print(post_data)
     click.echo(cli.do_POST('/api/user', post_data))
 
 @cli.group()
@@ -372,7 +371,6 @@ def new(cli, ownerid, name):
     post_data = {
         'ownerId': ownerid,
         'name': name}
-    print(post_data)
     click.echo(cli.do_POST('/api/organization', post_data))
 
 @cli.group()
