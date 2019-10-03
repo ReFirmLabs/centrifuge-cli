@@ -85,7 +85,6 @@ class Cli(object):
         res.raise_for_status()
         return res
 
-
     def do_DELETE(self, uri):
         if '?' not in uri:
             uri = uri + '?'
@@ -237,15 +236,18 @@ def upload(cli, make, model, version, chunksize, filename):
         ufid = res.json()['ufid']
         click.echo(f"Upload complete. When report is complete you may view results at {cli.endpoint}/report/{ufid}")
 
+
 @cli.group()
 @pass_cli
 def users(cli):
     pass
 
+
 @users.command(name="list")
 @pass_cli
 def user_list(cli):
     click.echo(cli.do_GET('/api/user'))
+
 
 @users.command()
 @click.option('--email', metavar='EMAIL', help='Email address of new user', required=True)
@@ -269,7 +271,7 @@ def new(cli, email, password, orgid, admin, expires, no_expire):
             raise RuntimeError('Expiry date is in the past, be sure to use "in" if specifying a time interval i.e. "in 2 weeks"')
 
         expiresAt = dt.strftime("%Y-%m-%d")
-    post_data = { 
+    post_data = {
         'username': email,
         'password': password,
         'organizationId': orgid,
@@ -280,16 +282,19 @@ def new(cli, email, password, orgid, admin, expires, no_expire):
 
     click.echo(cli.do_POST('/api/user', post_data))
 
+
 @cli.group()
 @click.option('--userid', metavar='ID', help='User ID of the user being modified', required=True)
 @pass_cli
 def user(cli, userid):
     cli.userid = userid
 
+
 @user.command()
 @pass_cli
 def delete(cli):
     click.echo(cli.do_DELETE(f'/api/user/{cli.userid}'))
+
 
 @user.command(name='set-expiration')
 @click.argument('expires', metavar='DATE')
@@ -317,6 +322,7 @@ def set_password(cli, password):
 
     click.echo(cli.do_PUT(f'/api/user/{cli.userid}', put_data))
 
+
 @user.command(name='set-organization-id')
 @click.argument('orgid', metavar='ID')
 @pass_cli
@@ -325,6 +331,7 @@ def set_organization_id(cli, orgid):
         'organizationId': int(orgid)}
 
     click.echo(cli.do_PUT(f'/api/user/{cli.userid}', put_data))
+
 
 @user.command(name='set-email')
 @click.argument('email', metavar='EMAIL')
@@ -345,6 +352,7 @@ def make_permanent(cli):
 
     click.echo(cli.do_PUT(f'/api/user/{cli.userid}', put_data))
 
+
 @user.command(name='make-admin')
 @pass_cli
 def make_admin(cli):
@@ -353,15 +361,18 @@ def make_admin(cli):
 
     click.echo(cli.do_PUT(f'/api/user/{cli.userid}', put_data))
 
+
 @cli.group()
 @pass_cli
 def orgs(cli):
     pass
 
+
 @orgs.command(name="list")
 @pass_cli
 def orgs_list(cli):
     click.echo(cli.do_GET('/api/organization'))
+
 
 @orgs.command()
 @click.option('--ownerid', metavar='ID', help='User id of the owner of this organization', required=True)
@@ -373,11 +384,13 @@ def new(cli, ownerid, name):
         'name': name}
     click.echo(cli.do_POST('/api/organization', post_data))
 
+
 @cli.group()
 @click.option('--orgid', metavar='ID', help='Organization id', required=True)
 @pass_cli
 def org(cli, orgid):
     cli.orgid = orgid
+
 
 @org.command()
 @click.option('--ownerid', metavar='OWNERID', help='User ID of the owner of this organization', required=True)
