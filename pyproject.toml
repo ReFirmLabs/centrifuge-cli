@@ -15,6 +15,7 @@ python = "^3.6"
 requests = "^2.22"
 Click = "^7.0"
 pandas = "^0.25.1"
+dateparser = "^0.7.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "^3.0"

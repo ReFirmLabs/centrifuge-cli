@@ -49,6 +49,20 @@ version = "0.4.1"
 
 [[package]]
 category = "main"
+description = "Date parsing library designed to parse dates from HTML pages"
+name = "dateparser"
+optional = false
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+version = "0.7.2"
+
+[package.dependencies]
+python-dateutil = "*"
+pytz = "*"
+regex = "*"
+tzlocal = "*"
+
+[[package]]
+category = "main"
 description = "Internationalized Domain Names in Applications (IDNA)"
 name = "idna"
 optional = false
@@ -153,6 +167,14 @@ version = "2019.2"
 
 [[package]]
 category = "main"
+description = "Alternative regular expression module, to replace re."
+name = "regex"
+optional = false
+python-versions = "*"
+version = "2019.08.19"
+
+[[package]]
+category = "main"
 description = "Python HTTP for Humans."
 name = "requests"
 optional = false
@@ -175,6 +197,17 @@ version = "1.12.0"
 
 [[package]]
 category = "main"
+description = "tzinfo object for the local timezone"
+name = "tzlocal"
+optional = false
+python-versions = "*"
+version = "2.0.0"
+
+[package.dependencies]
+pytz = "*"
+
+[[package]]
+category = "main"
 description = "HTTP library with thread-safe connection pooling, file post, and more."
 name = "urllib3"
 optional = false
@@ -193,7 +226,7 @@ version = "0.6.0"
 more-itertools = "*"
 
 [metadata]
-content-hash = "59c4107d43932694db837dd83cb6f3afe8ff71f3d95ea2c34c10f6378c0bfc57"
+content-hash = "c2ef181f0e5cfbbdff043ecb793a3ccba70b96834022252eea63963d321e4ad3"
 python-versions = "^3.6"
 
 [metadata.hashes]
@@ -203,6 +236,7 @@ certifi = ["046832c04d4e752f37383b628bc601a7ea7211496b4638f6514d0e5b9acc4939", "
 chardet = ["84ab92ed1c4d4f16916e05906b6b75a6c0fb5db821cc65e70cbd64a3e2a5eaae", "fc323ffcaeaed0e0a02bf4d117757b98aed530d9ed4531e3e15460124c106691"]
 click = ["2335065e6395b9e67ca716de5f7526736bfa6ceead690adf616d925bdc622b13", "5b94b49521f6456670fdb30cd82a4eca9412788a93fa6dd6df72c94d5a8ff2d7"]
 colorama = ["05eed71e2e327246ad6b38c540c4a3117230b19679b875190486ddd2d721422d", "f8ac84de7840f5b9c4e3347b3c1eaa50f7e49c2b07596221daec5edaabbd7c48"]
+dateparser = ["983d84b5e3861cb0aa240cad07f12899bb10b62328aae188b9007e04ce37d665", "e1eac8ef28de69a554d5fcdb60b172d526d61924b1a40afbbb08df459a36006b"]
 idna = ["c357b3f628cf53ae2c4c05627ecc484553142ca23264e593d327bcde5e9c3407", "ea8b7f6188e6fa117537c3df7da9fc686d485087abf6ac197f9c46432f7e4a3c"]
 importlib-metadata = ["23d3d873e008a513952355379d93cbcab874c58f4f034ff657c7a87422fa64e8", "80d2de76188eabfbfcf27e6a37342c2827801e59c4cc14b0371c56fed43820e3"]
 more-itertools = ["409cd48d4db7052af495b09dec721011634af3753ae1ef92d2b32f73a745f832", "92b8c4b06dac4f0611c0729b2f2ede52b2e1bac1ab48f089c7ddc12e26bb60c4"]
@@ -213,7 +247,9 @@ py = ["64f65755aee5b381cea27766a3a147c3f15b9b6b9ac88676de66ba2ae36793fa", "dc639
 pytest = ["3f193df1cfe1d1609d4c583838bea3d532b18d6160fd3f55c9447fdca30848ec", "e246cf173c01169b9617fc07264b7b1316e78d7a650055235d6d897bc80d9660"]
 python-dateutil = ["7e6584c74aeed623791615e26efd690f29817a27c73085b78e4bad02493df2fb", "c89805f6f4d64db21ed966fda138f8a5ed7a4fdbc1a8ee329ce1b74e3c74da9e"]
 pytz = ["26c0b32e437e54a18161324a2fca3c4b9846b74a8dccddd843113109e1116b32", "c894d57500a4cd2d5c71114aaab77dbab5eabd9022308ce5ac9bb93a60a6f0c7"]
+regex = ["1e9f9bc44ca195baf0040b1938e6801d2f3409661c15fe57f8164c678cfc663f", "587b62d48ca359d2d4f02d486f1f0aa9a20fbaf23a9d4198c4bed72ab2f6c849", "835ccdcdc612821edf132c20aef3eaaecfb884c9454fdc480d5887562594ac61", "93f6c9da57e704e128d90736430c5c59dd733327882b371b0cae8833106c2a21", "a46f27d267665016acb3ec8c6046ec5eae8cf80befe85ba47f43c6f5ec636dcd", "c5c8999b3a341b21ac2c6ec704cfcccbc50f1fedd61b6a8ee915ca7fd4b0a557", "d4d1829cf97632673aa49f378b0a2c3925acd795148c5ace8ef854217abbee89", "d96479257e8e4d1d7800adb26bf9c5ca5bab1648a1eddcac84d107b73dc68327", "f20f4912daf443220436759858f96fefbfc6c6ba9e67835fd6e4e9b73582791a", "f2b37b5b2c2a9d56d9e88efef200ec09c36c7f323f9d58d0b985a90923df386d", "fe765b809a1f7ce642c2edeee351e7ebd84391640031ba4b60af8d91a9045890"]
 requests = ["11e007a8a2aa0323f5a921e9e6a2d7e4e67d9877e85773fba9ba6419025cbeb4", "9cf5292fcd0f598c671cfc1e0d7d1a7f13bb8085e9a590f48c010551dc6c4b31"]
 six = ["3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c", "d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"]
+tzlocal = ["11c9f16e0a633b4b60e1eede97d8a46340d042e67b670b290ca526576e039048", "949b9dd5ba4be17190a80c0268167d7e6c92c62b30026cf9764caf3e308e5590"]
 urllib3 = ["b246607a25ac80bedac05c6f282e3cdaf3afb65420fd024ac94435cabe6e18d1", "dbe59173209418ae49d485b87d1681aefa36252ee85884c31346debd19463232"]
 zipp = ["3718b1cbcd963c7d4c5511a8240812904164b7f381b647143a89d3b98f9bcd8e", "f06903e9f1f43b12d371004b4ac7b06ab39a44adc747266928ae6debfa7b3335"]

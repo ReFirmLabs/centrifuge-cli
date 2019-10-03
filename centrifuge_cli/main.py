@@ -245,7 +245,7 @@ def users(cli):
 @users.command(name="list")
 @pass_cli
 def user_list(cli):
-    click.echo(cli.do_GET('/api/user?'))
+    click.echo(cli.do_GET('/api/user'))
 
 @users.command()
 @click.option('--email', metavar='EMAIL', help='Email address of new user', required=True)
@@ -354,6 +354,43 @@ def make_admin(cli):
 
     click.echo(cli.do_PUT(f'/api/user/{cli.userid}', put_data))
 
+@cli.group()
+@pass_cli
+def orgs(cli):
+    pass
+
+@orgs.command(name="list")
+@pass_cli
+def orgs_list(cli):
+    click.echo(cli.do_GET('/api/organization'))
+
+@orgs.command()
+@click.option('--ownerid', metavar='ID', help='User id of the owner of this organization', required=True)
+@click.argument('name', metavar='ORG_NAME')
+@pass_cli
+def new(cli, ownerid, name):
+    post_data = {
+        'ownerId': ownerid,
+        'name': name}
+    print(post_data)
+    click.echo(cli.do_POST('/api/organization', post_data))
+
+@cli.group()
+@click.option('--orgid', metavar='ID', help='Organization id', required=True)
+@pass_cli
+def org(cli, orgid):
+    cli.orgid = orgid
+
+@org.command()
+@click.option('--ownerid', metavar='OWNERID', help='User ID of the owner of this organization', required=True)
+@click.option('--name', metavar='NAME', help='Name of this organization', required=True)
+@pass_cli
+def change(cli, ownerid, name):
+    put_data = {
+        'name': name,
+        'ownerId': int(ownerid)}
+
+    click.echo(cli.do_PUT(f'/api/organization/{cli.orgid}', put_data))
 
 
 if __name__ == '__main__':
