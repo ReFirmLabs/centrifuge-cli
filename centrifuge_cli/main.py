@@ -10,6 +10,7 @@ import dateparser
 from datetime import datetime
 from collections import MutableMapping
 from itertools import chain, starmap
+from urllib.parse import urlparse, urlunparse
 
 import pandas as pd
 import numpy as np
@@ -35,17 +36,28 @@ def flatten(d, parent_key='', sep='.'):
 class Cli(object):
 
     def __init__(self, endpoint, apikey, limit, outfmt, fields):
-        self.endpoint = endpoint
         self.apikey = apikey
         self.limit = limit
         self.outfmt = outfmt
         self.fields = fields
 
-    def do_GET(self, uri):
-        if '?' not in uri:
-            uri = uri + '?'
+        url = urlparse(endpoint)
+        self.endpoint_scheme = url.scheme
+        self.endpoint_netloc = url.netloc
 
-        res = requests.get(f'{self.endpoint}{uri}&limit={self.limit}&authtoken={self.apikey}')
+    def build_url(self, path, query_list):
+        default_query = [f'limit={self.limit}',
+                         f'authtoken={self.apikey}']
+        if query_list is not None:
+            default_query.extend(query_list)
+
+        query = '&'.join(default_query)
+        return urlunparse((self.endpoint_scheme, self.endpoint_netloc, path, None, query, None))
+
+    def do_GET(self, path, query_list=None):
+        url = self.build_url(path, query_list)
+
+        res = requests.get(url)
         res.raise_for_status()
 
         if self.outfmt == 'json':
@@ -69,27 +81,24 @@ class Cli(object):
 
         return df
 
-    def do_POST(self, uri, data, files=None):
-        if '?' not in uri:
-            uri = uri + '?'
+    def do_POST(self, path, data, files=None, query_list=None):
+        url = self.build_url(path, query_list)
 
-        res = requests.post(f'{self.endpoint}{uri}&limit={self.limit}&authtoken={self.apikey}', data=data, files=files)
+        res = requests.post(url, data=data, files=files)
         res.raise_for_status()
         return res
 
-    def do_PUT(self, uri, data):
-        if '?' not in uri:
-            uri = uri + '?'
+    def do_PUT(self, path, data, query_list=None):
+        url = self.build_url(path, query_list)
 
-        res = requests.put(f'{self.endpoint}{uri}&limit={self.limit}&authtoken={self.apikey}', data=data)
+        res = requests.put(url, data=data)
         res.raise_for_status()
         return res
 
-    def do_DELETE(self, uri):
-        if '?' not in uri:
-            uri = uri + '?'
+    def do_DELETE(self, path, query_list=None):
+        url = self.build_url(path, query_list)
 
-        res = requests.delete(f'{self.endpoint}{uri}&authtoken={self.apikey}')
+        res = requests.delete(url)
         res.raise_for_status()
 
         if res.status_code not in (200, 204):
@@ -124,14 +133,19 @@ def reports(cli):
 @reports.command(name="list")
 @pass_cli
 def list_command(cli):
-    click.echo(cli.do_GET('/api/upload?sorters[0][field]=id&sorters[0][dir]=desc'))
+    click.echo(cli.do_GET('/api/upload', query_list=['sorters[0][field]=id',
+                                                     'sorters[0][dir]=desc']))
 
 
 @reports.command()
 @click.argument('searchterm', required=True)
 @pass_cli
 def search(cli, searchterm):
-    click.echo(cli.do_GET(f'/api/upload?sorters[0][field]=id&sorters[0][dir]=desc&filters[0][field]=search&filters[0][type]=like&filters[0][value]={searchterm}'))
+    click.echo(cli.do_GET('/api/upload', query_list=['sorters[0][field]=id',
+                                                     'sorters[0][dir]=desc',
+                                                     'filters[0][field]=search',
+                                                     'filters[0][type]=like',
+                                                     f'filters[0][value]={searchterm}']))
 
 
 @cli.group()
@@ -144,7 +158,7 @@ def report(cli, ufid):
 @report.command()
 @pass_cli
 def delete(cli):
-    click.echo(cli.do_DELETE(f'/api/upload?ufid={cli.ufid}'))
+    click.echo(cli.do_DELETE('/api/upload', query_list=[f'ufid={cli.ufid}', ]))
 
 
 @report.command()
@@ -156,7 +170,8 @@ def info(cli):
 @report.command()
 @pass_cli
 def crypto(cli):
-    click.echo(cli.do_GET(f'/api/report/crypto/{cli.ufid}?sorters[0][field]=path&sorters[0][dir]=asc'))
+    click.echo(cli.do_GET(f'/api/report/crypto/{cli.ufid}', query_list=['sorters[0][field]=path',
+                                                                        'sorters[0][dir]=asc']))
 
 
 @report.command()
@@ -168,7 +183,8 @@ def passhash(cli):
 @report.command()
 @pass_cli
 def guardian(cli):
-    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/analyzer-results?affected=true&sorters[0][field]=name&sorters[0][dir]=asc'))
+    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/analyzer-results', query_list=['affected=true&sorters[0][field]=name',
+                                                                                  'sorters[0][dir]=asc']))
 
 
 @report.command()
@@ -180,7 +196,8 @@ def sbom(cli):
 @report.command(name='code-summary')
 @pass_cli
 def code_summary(cli):
-    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/vulnerable-files?sorters[0][field]=totalFlaws&sorters[0][dir]=desc'))
+    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/vulnerable-files', query_list=['sorters[0][field]=totalFlaws',
+                                                                                  'sorters[0][dir]=desc']))
 
 
 @report.command(name='code-static')
@@ -188,7 +205,9 @@ def code_summary(cli):
 @click.option('--path', required=True, metavar='PATH', help='File path that you want to get analysis results for')
 @pass_cli
 def code_static(cli, exid, path):
-    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/vulnerable-files/{exid}?path={path}&sorters[0][field]=offset&sorters[0][dir]=asc'))
+    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/vulnerable-files/{exid}', query_list=[f'path={path}',
+                                                                                         'sorters[0][field]=offset',
+                                                                                         'sorters[0][dir]=asc']))
 
 
 @report.command(name='code-emulated')
@@ -196,7 +215,9 @@ def code_static(cli, exid, path):
 @click.option('--path', required=True, metavar='PATH', help='File path that you want to get analysis results for')
 @pass_cli
 def code_emulated(cli, exid, path):
-    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/emulated-files/{exid}?path={path}&sorters[0][field]=id&sorters[0][dir]=asc'))
+    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/emulated-files/{exid}', query_list=[f'path={path}',
+                                                                                       'sorters[0][field]=id',
+                                                                                       'sorters[0][dir]=asc']))
 
 
 @cli.command()
@@ -232,9 +253,9 @@ def upload(cli, make, model, version, chunksize, filename):
                 'dztotalchunkcount': totalChunkCount,
                 'dzchunkbytesoffset': chunkOffset
             }
-            res = cli.do_POST('/api/upload/chunky', data, files)
+            res = cli.do_POST('/api/upload/chunky', data, files=files)
         ufid = res.json()['ufid']
-        click.echo(f"Upload complete. When report is complete you may view results at {cli.endpoint}/report/{ufid}")
+        click.echo(f"Upload complete. Report id is {ufid}")
 
 
 @cli.group()
