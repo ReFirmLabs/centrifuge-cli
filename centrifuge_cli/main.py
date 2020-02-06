@@ -9,11 +9,9 @@ import requests
 import dateparser
 from datetime import datetime
 from collections import MutableMapping
-from itertools import chain, starmap
 from urllib.parse import urlparse, urlunparse
 
 import pandas as pd
-import numpy as np
 
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
@@ -54,11 +52,40 @@ class Cli(object):
         query = '&'.join(default_query)
         return urlunparse((self.endpoint_scheme, self.endpoint_netloc, path, None, query, None))
 
-    def do_GET(self, path, query_list=None):
-        url = self.build_url(path, query_list)
+    def do_GET(self, path, query_list=None, get_all=False):
 
-        res = requests.get(url)
-        res.raise_for_status()
+        if get_all:
+            page = 1
+            if query_list is None:
+                updated_query_list = [f'page={page}']
+            else:
+                updated_query_list = query_list + [f'page={page}']
+            url = self.build_url(path, updated_query_list)
+            res = requests.get(url)
+            res.raise_for_status()
+            data = res.json()
+            count = data['count']
+            if count <= self.limit:
+                return data
+
+            results = data['results']
+            total = self.limit
+            page = 2
+            while total < count:
+                updated_query_list = query_list + [f'page={page}']
+                url = self.build_url(path, updated_query_list)
+                res = requests.get(url)
+                res.raise_for_status()
+                results.extend(res.json()['results'])
+                total += self.limit
+                page += 1
+
+            return json.dumps({'count': count, 'results': results}, indent=2, sort_keys=True)
+
+        else:
+            url = self.build_url(path, query_list)
+            res = requests.get(url)
+            res.raise_for_status()
 
         if self.outfmt == 'json':
             return json.dumps(res.json(), indent=2, sort_keys=True)
@@ -219,6 +246,21 @@ def code_emulated(cli, exid, path):
                                                                                        'sorters[0][field]=id',
                                                                                        'sorters[0][dir]=asc']))
 
+@report.command(name='code-emulated-all')
+@pass_cli
+def code_emulated_all(cli):
+    cli.limit = 100
+    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/emulated-files', get_all=True,
+                          query_list=['sorters[0][field]=id', 'sorters[0][dir]=asc']))
+
+
+@report.command(name='code-static-all')
+@pass_cli
+def code_static_all(cli):
+    cli.limit = 100
+    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/vulnerable-files', get_all=True,
+                          query_list=['sorters[0][field]=id', 'sorters[0][dir]=asc']))
+
 
 @cli.command()
 @click.option('--make', metavar='MAKE', help='Manufacturer Name', required=True)
@@ -267,7 +309,7 @@ def users(cli):
 @users.command(name="list")
 @pass_cli
 def user_list(cli):
-    click.echo(cli.do_GET('/api/user'))
+    click.echo(cli.do_GET('/api/user', pagination=100))
 
 
 @users.command()
