@@ -254,7 +254,6 @@ def vulnerable_files(cli):
                           query_list=['sorters[0][field]=id', 'sorters[0][dir]=asc']))
 
 
-
 @cli.command()
 @click.option('--make', metavar='MAKE', help='Manufacturer Name', required=True)
 @click.option('--model', metavar='MODEL', help='Model Number', required=True)
