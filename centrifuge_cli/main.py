@@ -218,8 +218,9 @@ def sbom(cli):
 @report.command(name='code-summary')
 @pass_cli
 def code_summary(cli):
-    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/vulnerable-files', query_list=['sorters[0][field]=totalFlaws',
-                                                                                  'sorters[0][dir]=desc']))
+    cli.limit = 100
+    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/vulnerable-files', get_all=True,
+                          query_list=['sorters[0][field]=id', 'sorters[0][dir]=asc']))
 
 
 @report.command(name='code-static')
@@ -244,14 +245,6 @@ def code_emulated(cli, exid, path):
         query_list.append(f'path={path}')
 
     click.echo(cli.do_GET(f'/api/report/{cli.ufid}/emulated-files/{exid}', query_list=query_list))
-
-
-@report.command(name='vulnerable-files')
-@pass_cli
-def vulnerable_files(cli):
-    cli.limit = 100
-    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/vulnerable-files', get_all=True,
-                          query_list=['sorters[0][field]=id', 'sorters[0][dir]=asc']))
 
 
 @cli.command()
