@@ -8,7 +8,7 @@ import click
 import requests
 import dateparser
 from datetime import datetime
-from collections import MutableMapping
+from collections.abc import MutableMapping
 from urllib.parse import urlparse, urlunparse
 
 import pandas as pd
@@ -54,31 +54,26 @@ class Cli(object):
 
     def do_GET(self, path, query_list=None, get_all=False):
 
+        # handle paginated queries
         if get_all:
+            results = []
+            total = 0
             page = 1
-            if query_list is None:
-                updated_query_list = [f'page={page}']
-            else:
-                updated_query_list = query_list + [f'page={page}']
-            url = self.build_url(path, updated_query_list)
-            res = requests.get(url)
-            res.raise_for_status()
-            data = res.json()
-            count = data['count']
-            if count <= self.limit:
-                return data
-
-            results = data['results']
-            total = self.limit
-            page = 2
-            while total < count:
-                updated_query_list = query_list + [f'page={page}']
+            base_query_list = query_list if query_list else []
+            while True:
+                updated_query_list = base_query_list + [f'page={page}']
                 url = self.build_url(path, updated_query_list)
                 res = requests.get(url)
                 res.raise_for_status()
-                results.extend(res.json()['results'])
+
+                data = res.json()
+                results.extend(data['results'])
+                count = data['count']
                 total += self.limit
                 page += 1
+
+                if total >= count:
+                    break
 
             return json.dumps({'count': count, 'results': results}, indent=2, sort_keys=True)
 
@@ -228,38 +223,36 @@ def code_summary(cli):
 
 
 @report.command(name='code-static')
-@click.option('--exid', required=True, metavar='EXID', help='Extraction ID from code-summary output')
-@click.option('--path', required=True, metavar='PATH', help='File path that you want to get analysis results for')
+@click.option('--exid', default=0, metavar='EXID', help='Extraction ID from code-summary output')
+@click.option('--path', default=None, metavar='PATH', help='File path that you want to get analysis results for')
 @pass_cli
 def code_static(cli, exid, path):
-    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/vulnerable-files/{exid}', query_list=[f'path={path}',
-                                                                                         'sorters[0][field]=offset',
-                                                                                         'sorters[0][dir]=asc']))
+    query_list = ['sorters[0][field]=id', 'sorters[0][dir]=asc']
+    if exid and path:
+        query_list.append(f'path={path}')
+
+    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/vulnerable-files/{exid}', query_list=query_list))
 
 
 @report.command(name='code-emulated')
-@click.option('--exid', required=True, metavar='EXID', help='Extraction ID from code-summary output')
-@click.option('--path', required=True, metavar='PATH', help='File path that you want to get analysis results for')
+@click.option('--exid', metavar='EXID', default=0, help='Extraction ID from code-summary output')
+@click.option('--path', metavar='PATH', default=None, help='File path that you want to get analysis results for')
 @pass_cli
 def code_emulated(cli, exid, path):
-    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/emulated-files/{exid}', query_list=[f'path={path}',
-                                                                                       'sorters[0][field]=id',
-                                                                                       'sorters[0][dir]=asc']))
+    query_list = ['sorters[0][field]=id', 'sorters[0][dir]=asc']
+    if exid and path:
+        query_list.append(f'path={path}')
 
-@report.command(name='code-emulated-all')
+    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/emulated-files/{exid}', query_list=query_list))
+
+
+@report.command(name='vulnerable-files')
 @pass_cli
-def code_emulated_all(cli):
-    cli.limit = 100
-    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/emulated-files', get_all=True,
-                          query_list=['sorters[0][field]=id', 'sorters[0][dir]=asc']))
-
-
-@report.command(name='code-static-all')
-@pass_cli
-def code_static_all(cli):
+def vulnerable_files(cli):
     cli.limit = 100
     click.echo(cli.do_GET(f'/api/report/{cli.ufid}/vulnerable-files', get_all=True,
                           query_list=['sorters[0][field]=id', 'sorters[0][dir]=asc']))
+
 
 
 @cli.command()
