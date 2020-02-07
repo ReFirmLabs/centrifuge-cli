@@ -224,8 +224,8 @@ def code_summary(cli):
 
 
 @report.command(name='code-static')
-@click.option('--exid', default=0, metavar='EXID', help='Extraction ID from code-summary output')
-@click.option('--path', default=None, metavar='PATH', help='File path that you want to get analysis results for')
+@click.option('--exid', required=True, metavar='EXID', help='Extraction ID from code-summary output')
+@click.option('--path', required=True, metavar='PATH', help='File path that you want to get analysis results for')
 @pass_cli
 def code_static(cli, exid, path):
     query_list = ['sorters[0][field]=id', 'sorters[0][dir]=asc']
@@ -294,7 +294,7 @@ def users(cli):
 @users.command(name="list")
 @pass_cli
 def user_list(cli):
-    click.echo(cli.do_GET('/api/user', pagination=100))
+    click.echo(cli.do_GET('/api/user'))
 
 
 @users.command()
