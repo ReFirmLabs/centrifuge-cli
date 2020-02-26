@@ -67,8 +67,9 @@ class Cli(object):
                 res.raise_for_status()
 
                 data = res.json()
-                results.extend(data['results'])
-                count = data['count']
+                result = data['checkSecs']['results'] if path.endswith("binary-hardening") else data['results']
+                results.extend(result)
+                count = data['checkSecs']['count'] if path.endswith("binary-hardening") else data['count']
                 total += self.limit
                 page += 1
 
@@ -245,6 +246,27 @@ def code_emulated(cli, exid, path):
         query_list.append(f'path={path}')
 
     click.echo(cli.do_GET(f'/api/report/{cli.ufid}/emulated-files/{exid}', query_list=query_list))
+
+
+@report.command()
+@click.option('--get-all/ --get-normal', default=False, help='Fetch all the records')
+@pass_cli
+def certificates(cli, get_all):
+    click.echo(cli.do_GET(f'/api/report/crypto/{cli.ufid}/certificates', get_all=get_all))
+
+
+@report.command()
+@click.option('--get-all/ --get-normal', default=False, help='Fetch all the records')
+@pass_cli
+def privatekeys(cli, get_all):
+    click.echo(cli.do_GET(f'/api/report/crypto/{cli.ufid}/privateKeys', get_all=get_all))
+
+
+@report.command(name='binary-hardening')
+@click.option('--get-all/ --get-normal', default=False, help='Fetch all the records')
+@pass_cli
+def binary_hardening(cli, get_all):
+    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/binary-hardening', get_all=get_all))
 
 
 @cli.command()
