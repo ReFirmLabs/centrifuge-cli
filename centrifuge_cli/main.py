@@ -266,7 +266,7 @@ def privatekeys(cli):
 @report.command(name='binary-hardening')
 @pass_cli
 def binary_hardening(cli):
-    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/binary-hardening', get_all=False))
+    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/binary-hardening', get_all=True))
 
 
 @cli.command()
