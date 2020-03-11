@@ -254,13 +254,13 @@ def code_emulated(cli, exid, path):
 @report.command()
 @pass_cli
 def certificates(cli):
-    click.echo(cli.do_GET(f'/api/report/crypto/{cli.ufid}/certificates', get_all=False))
+    click.echo(cli.do_GET(f'/api/report/crypto/{cli.ufid}/certificates', get_all=True))
 
 
 @report.command(name='private-keys')
 @pass_cli
 def privatekeys(cli):
-    click.echo(cli.do_GET(f'/api/report/crypto/{cli.ufid}/privateKeys', get_all=False))
+    click.echo(cli.do_GET(f'/api/report/crypto/{cli.ufid}/privateKeys', get_all=True))
 
 
 @report.command(name='binary-hardening')
