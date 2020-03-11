@@ -67,9 +67,10 @@ class Cli(object):
                 res.raise_for_status()
 
                 data = res.json()
-                result = data['checkSecs']['results'] if path.endswith("binary-hardening") else data['results']
-                results.extend(result)
-                count = data['checkSecs']['count'] if path.endswith("binary-hardening") else data['count']
+                # handle binary hardness specifically while that API endpoint is not compliant with the rest
+                data = data['checkSecs'] if 'checkSecs' in data else data
+                results.extend(data['results'])
+                count = data['count']
                 total += self.limit
                 page += 1
 
@@ -82,11 +83,13 @@ class Cli(object):
             url = self.build_url(path, query_list)
             res = requests.get(url)
             res.raise_for_status()
+            data = res.json()
+            data = data['checkSecs'] if 'checkSecs' in data else data
 
         if self.outfmt == 'json':
-            return json.dumps(res.json(), indent=2, sort_keys=True)
+            return json.dumps(data, indent=2, sort_keys=True)
 
-        results = res.json()
+        results = data
         if 'results' in results:
             results = results['results']
         elif not isinstance(results, list):
@@ -249,24 +252,21 @@ def code_emulated(cli, exid, path):
 
 
 @report.command()
-@click.option('--get-all/ --get-normal', default=False, help='Fetch all the records')
 @pass_cli
-def certificates(cli, get_all):
-    click.echo(cli.do_GET(f'/api/report/crypto/{cli.ufid}/certificates', get_all=get_all))
+def certificates(cli):
+    click.echo(cli.do_GET(f'/api/report/crypto/{cli.ufid}/certificates', get_all=False))
 
 
-@report.command()
-@click.option('--get-all/ --get-normal', default=False, help='Fetch all the records')
+@report.command(name='private-keys')
 @pass_cli
-def privatekeys(cli, get_all):
-    click.echo(cli.do_GET(f'/api/report/crypto/{cli.ufid}/privateKeys', get_all=get_all))
+def privatekeys(cli):
+    click.echo(cli.do_GET(f'/api/report/crypto/{cli.ufid}/privateKeys', get_all=False))
 
 
 @report.command(name='binary-hardening')
-@click.option('--get-all/ --get-normal', default=False, help='Fetch all the records')
 @pass_cli
-def binary_hardening(cli, get_all):
-    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/binary-hardening', get_all=get_all))
+def binary_hardening(cli):
+    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/binary-hardening', get_all=False))
 
 
 @cli.command()
