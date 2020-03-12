@@ -67,6 +67,8 @@ class Cli(object):
                 res.raise_for_status()
 
                 data = res.json()
+                # handle binary hardness specifically while that API endpoint is not compliant with the rest
+                data = data['checkSecs'] if 'checkSecs' in data else data
                 results.extend(data['results'])
                 count = data['count']
                 total += self.limit
@@ -81,11 +83,13 @@ class Cli(object):
             url = self.build_url(path, query_list)
             res = requests.get(url)
             res.raise_for_status()
+            data = res.json()
+            data = data['checkSecs'] if 'checkSecs' in data else data
 
         if self.outfmt == 'json':
-            return json.dumps(res.json(), indent=2, sort_keys=True)
+            return json.dumps(data, indent=2, sort_keys=True)
 
-        results = res.json()
+        results = data
         if 'results' in results:
             results = results['results']
         elif not isinstance(results, list):
@@ -245,6 +249,30 @@ def code_emulated(cli, exid, path):
         query_list.append(f'path={path}')
 
     click.echo(cli.do_GET(f'/api/report/{cli.ufid}/emulated-files/{exid}', query_list=query_list))
+
+
+@report.command()
+@pass_cli
+def certificates(cli):
+    click.echo(cli.do_GET(f'/api/report/crypto/{cli.ufid}/certificates', get_all=True))
+
+
+@report.command(name='private-keys')
+@pass_cli
+def privatekeys(cli):
+    click.echo(cli.do_GET(f'/api/report/crypto/{cli.ufid}/privateKeys', get_all=True))
+
+
+@report.command(name='public-keys')
+@pass_cli
+def public_keys(cli):
+    click.echo(cli.do_GET(f'/api/report/crypto/{cli.ufid}/publicKeys', get_all=True))
+
+
+@report.command(name='binary-hardening')
+@pass_cli
+def binary_hardening(cli):
+    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/binary-hardening', get_all=True))
 
 
 @cli.command()
