@@ -259,8 +259,14 @@ def certificates(cli):
 
 @report.command(name='private-keys')
 @pass_cli
-def privatekeys(cli):
+def private_keys(cli):
     click.echo(cli.do_GET(f'/api/report/crypto/{cli.ufid}/privateKeys', get_all=False))
+
+
+@report.command(name='public-keys')
+@pass_cli
+def public_keys(cli):
+    click.echo(cli.do_GET(f'/api/report/crypto/{cli.ufid}/publicKeys', get_all=False))
 
 
 @report.command(name='binary-hardening')
