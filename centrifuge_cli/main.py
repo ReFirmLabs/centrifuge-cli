@@ -33,7 +33,7 @@ def flatten(d, parent_key='', sep='.'):
 
 class Cli(object):
 
-    def __init__(self, endpoint, apikey, limit, outfmt, fields):
+    def __init__(self, endpoint, apikey, limit, outfmt, fields, ssl_no_verify):
         self.apikey = apikey
         self.limit = limit
         self.outfmt = outfmt
@@ -42,6 +42,8 @@ class Cli(object):
         url = urlparse(endpoint)
         self.endpoint_scheme = url.scheme
         self.endpoint_netloc = url.netloc
+
+        self.ssl_verify = not(ssl_no_verify)
 
     def build_url(self, path, query_list):
         default_query = [f'limit={self.limit}',
@@ -63,7 +65,7 @@ class Cli(object):
             while True:
                 updated_query_list = base_query_list + [f'page={page}']
                 url = self.build_url(path, updated_query_list)
-                res = requests.get(url)
+                res = requests.get(url, verify=self.ssl_verify)
                 res.raise_for_status()
 
                 data = res.json()
@@ -81,7 +83,7 @@ class Cli(object):
 
         else:
             url = self.build_url(path, query_list)
-            res = requests.get(url)
+            res = requests.get(url, verify=self.ssl_verify)
             res.raise_for_status()
             data = res.json()
             data = data['checkSecs'] if 'checkSecs' in data else data
@@ -110,21 +112,21 @@ class Cli(object):
     def do_POST(self, path, data, files=None, query_list=None):
         url = self.build_url(path, query_list)
 
-        res = requests.post(url, data=data, files=files)
+        res = requests.post(url, data=data, files=files, verify=self.ssl_verify)
         res.raise_for_status()
         return res
 
     def do_PUT(self, path, data, query_list=None):
         url = self.build_url(path, query_list)
 
-        res = requests.put(url, data=data)
+        res = requests.put(url, data=data, verify=self.ssl_verify)
         res.raise_for_status()
         return res
 
     def do_DELETE(self, path, query_list=None):
         url = self.build_url(path, query_list)
 
-        res = requests.delete(url)
+        res = requests.delete(url, verify=self.ssl_verify)
         res.raise_for_status()
 
         if res.status_code not in (200, 204):
@@ -144,10 +146,11 @@ pass_cli = click.make_pass_decorator(Cli)
 @click.option('--limit', default=20, help='Number of results to return, use -1 for no limit')
 @click.option('--outfmt', default='human', help='Output format of command', type=click.Choice(['human', 'json', 'csv']))
 @click.option('--field', '-f', multiple=True, metavar='FIELD', help="Select field(s) when output is human or csv")
+@click.option('--ssl-no-verify', help="Disables SSL certificate verification", is_flag=True)
 @click.version_option('0.1')
 @click.pass_context
-def cli(ctx, endpoint, apikey, limit, outfmt, field):
-    ctx.obj = Cli(endpoint, apikey, limit, outfmt, field)
+def cli(ctx, endpoint, apikey, limit, outfmt, field, ssl_no_verify):
+    ctx.obj = Cli(endpoint, apikey, limit, outfmt, field, ssl_no_verify)
 
 
 @cli.group()
