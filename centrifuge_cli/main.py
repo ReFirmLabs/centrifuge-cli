@@ -63,8 +63,14 @@ class Cli(object):
             while True:
                 updated_query_list = base_query_list + [f'page={page}']
                 url = self.build_url(path, updated_query_list)
-                res = requests.get(url)
-                res.raise_for_status()
+                try:
+                    res = requests.get(url)
+                except requests.exceptions.ConnectionError as ex:
+                    return "{statusCode: 502, message: Could not connect to host: %s}" % self.endpoint_netloc
+                if res.status_code != 200:
+                    if res.status_code == 403:
+                        return "{statusCode: 403, message: User not authorized}"
+                    return res.text
 
                 data = res.json()
                 # handle binary hardness specifically while that API endpoint is not compliant with the rest
