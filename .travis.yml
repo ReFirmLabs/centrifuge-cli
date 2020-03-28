@@ -1,3 +1,4 @@
+os: linux
 language: python
 python: "3.6"
 dist: xenial
@@ -36,9 +37,7 @@ before_deploy:
 deploy:
   provider: script
   script: poetry publish
-  skip_cleanup: true
   on:
     all_branches: true  # Travis recognizes tag names as "branches"
-    condition: $TRAVIS_BUILD_STAGE_NAME = Deploy
     tags: true
 
