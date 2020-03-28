@@ -21,7 +21,7 @@ jobs:
         - pip install pytest toml
       script:
         - pytest
-    - stage: Publish
+    - stage: publish
       script: skip
       before_deploy:
         - pip install --upgrade pip
@@ -29,6 +29,7 @@ jobs:
         - poetry config http-basic.pypi $PYPI_USER $PYPI_PASS
         - poetry build
       deploy:
+        skip_cleanup: true
         provider: script
         script: poetry publish
         on:
