@@ -6,8 +6,7 @@ dist: xenial
 stages:
   - lint
   - test
-  - name: deploy
-    if: tag IS present
+  - publish
 
 jobs:
   include:
@@ -22,22 +21,16 @@ jobs:
         - pip install pytest toml
       script:
         - pytest
-    - stage: deploy
-      script:
-        - echo Deploying to PyPI...
-
-before_deploy:
-  # User and password environment variables are set as hidden variables through
-  # the web interface in the project settings.
-  - pip install --upgrade pip
-  - pip install poetry
-  - poetry config http-basic.pypi $PYPI_USER $PYPI_PASS
-  - poetry build
-
-deploy:
-  provider: script
-  script: poetry publish
-  on:
-    all_branches: true  # Travis recognizes tag names as "branches"
-    tags: true
-
+    - stage: Publish
+      script: skip
+      before_deploy:
+        - pip install --upgrade pip
+        - pip install poetry
+        - poetry config http-basic.pypi $PYPI_USER $PYPI_PASS
+        - poetry build
+      deploy:
+        provider: script
+        script: poetry publish
+        on:
+          tags: true
+      if: tag IS present
