@@ -115,28 +115,40 @@ class Cli(object):
 
     def do_POST(self, path, data, files=None, query_list=None):
         url = self.build_url(path, query_list)
-
-        res = requests.post(url, data=data, files=files)
-        res.raise_for_status()
+        try:
+            res = requests.post(url, data=data, files=files)
+        except requests.exceptions.ConnectionError as ex:
+            return "{statusCode: 502, message: Could not connect to host: %s}" % self.endpoint_netloc
+        if res.status_code != 200:
+            if res.status_code == 403:
+                return "{statusCode: 403, message: User not authorized}"
+            return res.text
         return res
 
     def do_PUT(self, path, data, query_list=None):
         url = self.build_url(path, query_list)
-
-        res = requests.put(url, data=data)
-        res.raise_for_status()
+        try:
+            res = requests.put(url, data=data)
+        except requests.exceptions.ConnectionError as ex:
+            return "{statusCode: 502, message: Could not connect to host: %s}" % self.endpoint_netloc
+        if res.status_code != 200:
+            if res.status_code == 403:
+                return "{statusCode: 403, message: User not authorized}"
+            return res.text
         return res
 
     def do_DELETE(self, path, query_list=None):
         url = self.build_url(path, query_list)
+        try:
+            res = requests.delete(url)
+        except requests.exceptions.ConnectionError as ex:
+            return "{statusCode: 502, message: Could not connect to host: %s}" % self.endpoint_netloc
+        if res.status_code != 200:
+            if res.status_code == 403:
+                return "{statusCode: 403, message: User not authorized}"
+            return ('Error occurred, could not delete')
 
-        res = requests.delete(url)
-        res.raise_for_status()
-
-        if res.status_code not in (200, 204):
-            return('Error occurred, could not delete')
-        else:
-            return('Deleted')
+        return('Deleted')
 
 
 pass_cli = click.make_pass_decorator(Cli)
