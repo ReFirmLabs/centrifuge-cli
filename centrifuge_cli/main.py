@@ -89,8 +89,14 @@ class Cli(object):
 
         else:
             url = self.build_url(path, query_list)
-            res = requests.get(url, verify=self.ssl_verify)
-            res.raise_for_status()
+            try:
+                res = requests.get(url, verify=self.ssl_verify)
+            except requests.exceptions.ConnectionError as ex:
+                return "{statusCode: 502, message: Could not connect to host: %s}" % self.endpoint_netloc
+            if res.status_code != 200:
+                if res.status_code == 403:
+                    return "{statusCode: 403, message: User not authorized}"
+                return res.text
             data = res.json()
             data = data['checkSecs'] if 'checkSecs' in data else data
 
