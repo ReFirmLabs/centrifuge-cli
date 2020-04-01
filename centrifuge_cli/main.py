@@ -68,7 +68,7 @@ class Cli(object):
                 try:
                     res = requests.get(url, verify=self.ssl_verify)
                 except requests.exceptions.ConnectionError as ex:
-                    return "{statusCode: 502, message: Could not connect to host: %s}" % self.endpoint_netloc
+                    return f'{{statusCode: 502, message: Could not connect to host: {self.endpoint_netloc}}}'
                 if res.status_code != 200:
                     if res.status_code == 403:
                         return "{statusCode: 403, message: User not authorized}"
@@ -92,7 +92,7 @@ class Cli(object):
             try:
                 res = requests.get(url, verify=self.ssl_verify)
             except requests.exceptions.ConnectionError as ex:
-                return "{statusCode: 502, message: Could not connect to host: %s}" % self.endpoint_netloc
+                return f'{{statusCode: 502, message: Could not connect to host: {self.endpoint_netloc}}}'
             if res.status_code != 200:
                 if res.status_code == 403:
                     return "{statusCode: 403, message: User not authorized}"
@@ -126,7 +126,7 @@ class Cli(object):
         try:
             res = requests.post(url, data=data, files=files)
         except requests.exceptions.ConnectionError as ex:
-            return "{statusCode: 502, message: Could not connect to host: %s}" % self.endpoint_netloc
+            return f'{{statusCode: 502, message: Could not connect to host: {self.endpoint_netloc}}}'
         if res.status_code != 200:
             if res.status_code == 403:
                 return "{statusCode: 403, message: User not authorized}"
@@ -138,7 +138,7 @@ class Cli(object):
         try:
             res = requests.put(url, data=data)
         except requests.exceptions.ConnectionError as ex:
-            return "{statusCode: 502, message: Could not connect to host: %s}" % self.endpoint_netloc
+            return f'{{statusCode: 502, message: Could not connect to host: {self.endpoint_netloc}}}'
         if res.status_code != 200:
             if res.status_code == 403:
                 return "{statusCode: 403, message: User not authorized}"
@@ -150,7 +150,7 @@ class Cli(object):
         try:
             res = requests.delete(url)
         except requests.exceptions.ConnectionError as ex:
-            return "{statusCode: 502, message: Could not connect to host: %s}" % self.endpoint_netloc
+            return f'{{statusCode: 502, message: Could not connect to host: {self.endpoint_netloc}}}'
         if res.status_code != 200:
             if res.status_code == 403:
                 return "{statusCode: 403, message: User not authorized}"
