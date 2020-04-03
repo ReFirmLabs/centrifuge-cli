@@ -158,6 +158,7 @@ class Cli(object):
 
         return('Deleted')
 
+
 pass_cli = click.make_pass_decorator(Cli)
 
 
