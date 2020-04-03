@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "centrifuge-cli"
-version = "0.3.0"
+version = "0.3.1"
 description = "A command line utility for interacting with the Centrifuge Firmware Analysis Platform's REST API."
 authors = ["Peter Eacmen <peacmen@refirmlabs.com>"]
 readme = 'README.rst'

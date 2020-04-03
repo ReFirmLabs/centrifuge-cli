@@ -65,8 +65,14 @@ class Cli(object):
             while True:
                 updated_query_list = base_query_list + [f'page={page}']
                 url = self.build_url(path, updated_query_list)
-                res = requests.get(url, verify=self.ssl_verify)
-                res.raise_for_status()
+                try:
+                    res = requests.get(url, verify=self.ssl_verify)
+                except requests.exceptions.ConnectionError as ex:
+                    return f'{{statusCode: 502, message: Could not connect to host: {self.endpoint_netloc}}}'
+                if res.status_code != 200:
+                    if res.status_code == 403:
+                        return "{statusCode: 403, message: User not authorized}"
+                    return res.text
 
                 data = res.json()
                 # handle binary hardness specifically while that API endpoint is not compliant with the rest
@@ -83,8 +89,14 @@ class Cli(object):
 
         else:
             url = self.build_url(path, query_list)
-            res = requests.get(url, verify=self.ssl_verify)
-            res.raise_for_status()
+            try:
+                res = requests.get(url, verify=self.ssl_verify)
+            except requests.exceptions.ConnectionError as ex:
+                return f'{{statusCode: 502, message: Could not connect to host: {self.endpoint_netloc}}}'
+            if res.status_code != 200:
+                if res.status_code == 403:
+                    return "{statusCode: 403, message: User not authorized}"
+                return res.text
             data = res.json()
             data = data['checkSecs'] if 'checkSecs' in data else data
 
@@ -111,28 +123,40 @@ class Cli(object):
 
     def do_POST(self, path, data, files=None, query_list=None):
         url = self.build_url(path, query_list)
-
-        res = requests.post(url, data=data, files=files, verify=self.ssl_verify)
-        res.raise_for_status()
+        try:
+            res = requests.post(url, data=data, files=files)
+        except requests.exceptions.ConnectionError as ex:
+            return f'{{statusCode: 502, message: Could not connect to host: {self.endpoint_netloc}}}'
+        if res.status_code != 200:
+            if res.status_code == 403:
+                return "{statusCode: 403, message: User not authorized}"
+            return res.text
         return res
 
     def do_PUT(self, path, data, query_list=None):
         url = self.build_url(path, query_list)
-
-        res = requests.put(url, data=data, verify=self.ssl_verify)
-        res.raise_for_status()
+        try:
+            res = requests.put(url, data=data)
+        except requests.exceptions.ConnectionError as ex:
+            return f'{{statusCode: 502, message: Could not connect to host: {self.endpoint_netloc}}}'
+        if res.status_code != 200:
+            if res.status_code == 403:
+                return "{statusCode: 403, message: User not authorized}"
+            return res.text
         return res
 
     def do_DELETE(self, path, query_list=None):
         url = self.build_url(path, query_list)
+        try:
+            res = requests.delete(url)
+        except requests.exceptions.ConnectionError as ex:
+            return f'{{statusCode: 502, message: Could not connect to host: {self.endpoint_netloc}}}'
+        if res.status_code != 200:
+            if res.status_code == 403:
+                return "{statusCode: 403, message: User not authorized}"
+            return ('Error occurred, could not delete')
 
-        res = requests.delete(url, verify=self.ssl_verify)
-        res.raise_for_status()
-
-        if res.status_code not in (200, 204):
-            return('Error occurred, could not delete')
-        else:
-            return('Deleted')
+        return('Deleted')
 
 
 pass_cli = click.make_pass_decorator(Cli)
