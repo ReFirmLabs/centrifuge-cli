@@ -7,12 +7,14 @@ import uuid
 import click
 import requests
 import dateparser
+import pandas as pd
+
 from datetime import datetime
 from collections.abc import MutableMapping
 from urllib.parse import urlparse, urlunparse
 from centrifuge_cli.policy import CentrifugePolicyCheck
+from centrifuge_cli import __version__ as PACKAGE_VERSION
 
-import pandas as pd
 
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
@@ -177,7 +179,7 @@ pass_cli = click.make_pass_decorator(Cli)
 @click.option('--outfmt', default='human', help='Output format of command', type=click.Choice(['human', 'json', 'csv']))
 @click.option('--field', '-f', multiple=True, metavar='FIELD', help="Select field(s) when output is human or csv")
 @click.option('--ssl-no-verify', help="Disables SSL certificate verification", is_flag=True)
-@click.version_option('0.1')
+@click.version_option(PACKAGE_VERSION)
 @click.pass_context
 def cli(ctx, endpoint, apikey, limit, outfmt, field, ssl_no_verify):
     ctx.obj = Cli(endpoint, apikey, limit, outfmt, field, ssl_no_verify)
@@ -372,7 +374,7 @@ def check_policy(cli, ctx, policy_yaml):
     cli.outfmt = outfmt
     cli.echo(result)
     return(result)
-    
+
 @cli.command()
 @click.option('--make', metavar='MAKE', help='Manufacturer Name', required=True)
 @click.option('--model', metavar='MODEL', help='Model Number', required=True)
