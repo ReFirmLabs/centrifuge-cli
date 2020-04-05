@@ -43,12 +43,12 @@ POLICY_DETAIL_MAPPING = {
     }
 }
 POLICIES = [
-  'certificates',
-  'privateKeys',
-  'passwordHashes',
-  'code',
-  'guardian',
-  'binaryHardening'
+    'certificates',
+    'privateKeys',
+    'passwordHashes',
+    'code',
+    'guardian',
+    'binaryHardening'
 ]
 
 
@@ -56,8 +56,8 @@ class CentrifugePolicyCheck(object):
     """
     A class to process POLICIES specified in YAML file.
     """
-    def __init__(self, 
-                 certificates_json, 
+    def __init__(self,
+                 certificates_json,
                  private_keys_json,
                  binary_hardening_json,
                  guardian_json,
@@ -264,15 +264,13 @@ class CentrifugePolicyCheck(object):
         else:
             raise RuntimeError(f'Invalid Rule name {name}')
 
-
     def generate_csv(self):
-        output = io.StringIO( )
+        output = io.StringIO()
         writer = csv.DictWriter(output, fieldnames=CSV_HEADER)
         writer.writeheader()
         for policy, policy_detail in POLICY_DETAIL_MAPPING.items():
             writer.writerow({"Policy Name": policy_detail.get("name"), "Compliant": policy_detail.get("status")})
         return output.getvalue()
-
 
     def generate_json(self):
         final_result_dict = {

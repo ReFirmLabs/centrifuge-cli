@@ -242,7 +242,7 @@ def crypto(cli):
     click.echo('crypto is a deprecated endpoint and will be removed in future releases, please migrate to certificates and privatekeys',
                err=True)
     result = cli.do_GET(f'/api/report/crypto/{cli.ufid}', query_list=['sorters[0][field]=path',
-                                                                        'sorters[0][dir]=asc'])
+                                                                      'sorters[0][dir]=asc'])
     cli.echo(result)
     return(result)
 
@@ -259,7 +259,7 @@ def passhash(cli):
 @pass_cli
 def guardian(cli):
     result = cli.do_GET(f'/api/report/{cli.ufid}/analyzer-results', query_list=['affected=true&sorters[0][field]=name',
-                                                                                  'sorters[0][dir]=asc'])
+                                                                                'sorters[0][dir]=asc'])
     cli.echo(result)
     return(result)
 
@@ -277,7 +277,7 @@ def sbom(cli):
 def code_summary(cli):
     cli.limit = 100
     result = cli.do_GET(f'/api/report/{cli.ufid}/vulnerable-files', get_all=True,
-                          query_list=['sorters[0][field]=id', 'sorters[0][dir]=asc'])
+                        query_list=['sorters[0][field]=id', 'sorters[0][dir]=asc'])
     cli.echo(result)
     return(result)
 
@@ -341,6 +341,7 @@ def binary_hardening(cli):
     cli.echo(result)
     return(result)
 
+
 @report.command(name='check-policy')
 @click.option('--policy-yaml', metavar='FILE', type=click.Path(), help='Centrifuge policy yaml file.', required=True)
 @click.pass_context
@@ -357,23 +358,24 @@ def check_policy(cli, ctx, policy_yaml):
     code_summary_json = json.loads(ctx.invoke(code_summary))
     passhash_json = json.loads(ctx.invoke(passhash))
 
-    policy_obj = CentrifugePolicyCheck(certificates_json, 
+    policy_obj = CentrifugePolicyCheck(certificates_json,
                                        private_keys_json,
                                        binary_hardening_json,
                                        guardian_json,
                                        code_summary_json,
                                        passhash_json)
-    
+
     policy_obj.check_rules(policy_yaml)
 
-    result = policy_obj.generate_csv( )
+    result = policy_obj.generate_csv()
     if outfmt == 'json':
-        result = policy_obj.generate_json( )
+        result = policy_obj.generate_json()
 
     cli.echo_enabled = True
     cli.outfmt = outfmt
     cli.echo(result)
     return(result)
+
 
 @cli.command()
 @click.option('--make', metavar='MAKE', help='Manufacturer Name', required=True)
@@ -409,13 +411,13 @@ def upload(cli, make, model, version, chunksize, filename):
                 'dzchunkbytesoffset': chunkOffset
             }
             res = cli.do_POST('/api/upload/chunky', data, files=files)
-        ufid = res.json()['ufid'] 
+        ufid = res.json()['ufid']
         result = f'Upload complete. Report id is {ufid}'
         if cli.outfmt == 'json':
             result = res.text
         elif cli.outfmt == 'csv':
             result = f'id,\n{ufid}\n'
-        
+
         cli.echo(result)
         return(result)
 
@@ -609,6 +611,7 @@ def change(cli, ownerid, name):
     result = cli.do_PUT(f'/api/organization/{cli.orgid}', put_data)
     cli.echo(result)
     return(result)
+
 
 if __name__ == '__main__':
     cli()
