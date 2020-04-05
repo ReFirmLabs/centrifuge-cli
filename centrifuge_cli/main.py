@@ -10,6 +10,7 @@ import dateparser
 from datetime import datetime
 from collections.abc import MutableMapping
 from urllib.parse import urlparse, urlunparse
+from centrifuge_cli.policy import CentrifugePolicyCheck
 
 import pandas as pd
 
@@ -38,6 +39,7 @@ class Cli(object):
         self.limit = limit
         self.outfmt = outfmt
         self.fields = fields
+        self.echo_enabled = True
 
         url = urlparse(endpoint)
         self.endpoint_scheme = url.scheme
@@ -158,6 +160,10 @@ class Cli(object):
 
         return('Deleted')
 
+    def echo(self, message):
+        if self.echo_enabled:
+            click.echo(message)
+
 
 pass_cli = click.make_pass_decorator(Cli)
 
@@ -186,19 +192,23 @@ def reports(cli):
 @reports.command(name="list")
 @pass_cli
 def list_command(cli):
-    click.echo(cli.do_GET('/api/upload', query_list=['sorters[0][field]=id',
-                                                     'sorters[0][dir]=desc']))
+    result = cli.do_GET('/api/upload', query_list=['sorters[0][field]=id',
+                                                   'sorters[0][dir]=desc'])
+    cli.echo(result)
+    return(result)
 
 
 @reports.command()
 @click.argument('searchterm', required=True)
 @pass_cli
 def search(cli, searchterm):
-    click.echo(cli.do_GET('/api/upload', query_list=['sorters[0][field]=id',
-                                                     'sorters[0][dir]=desc',
-                                                     'filters[0][field]=search',
-                                                     'filters[0][type]=like',
-                                                     f'filters[0][value]={searchterm}']))
+    result = cli.do_GET('/api/upload', query_list=['sorters[0][field]=id',
+                                                   'sorters[0][dir]=desc',
+                                                   'filters[0][field]=search',
+                                                   'filters[0][type]=like',
+                                                   f'filters[0][value]={searchterm}'])
+    cli.echo(result)
+    return(result)
 
 
 @cli.group()
@@ -211,47 +221,63 @@ def report(cli, ufid):
 @report.command()
 @pass_cli
 def delete(cli):
-    click.echo(cli.do_DELETE('/api/upload', query_list=[f'ufid={cli.ufid}', ]))
+    result = cli.do_DELETE('/api/upload', query_list=[f'ufid={cli.ufid}', ])
+    cli.echo(result)
+    return(result)
 
 
 @report.command()
 @pass_cli
 def info(cli):
-    click.echo(cli.do_GET(f'/api/upload/details/{cli.ufid}'))
+    result = cli.do_GET(f'/api/upload/details/{cli.ufid}')
+    cli.echo(result)
+    return(result)
 
 
 @report.command()
 @pass_cli
 def crypto(cli):
-    click.echo(cli.do_GET(f'/api/report/crypto/{cli.ufid}', query_list=['sorters[0][field]=path',
-                                                                        'sorters[0][dir]=asc']))
+    click.echo('crypto is a deprecated endpoint and will be removed in future releases, please migrate to certificates and privatekeys',
+               err=True)
+    result = cli.do_GET(f'/api/report/crypto/{cli.ufid}', query_list=['sorters[0][field]=path',
+                                                                        'sorters[0][dir]=asc'])
+    cli.echo(result)
+    return(result)
 
 
 @report.command()
 @pass_cli
 def passhash(cli):
-    click.echo(cli.do_GET(f'/api/report/passwordhash/{cli.ufid}'))
+    result = cli.do_GET(f'/api/report/passwordhash/{cli.ufid}')
+    cli.echo(result)
+    return(result)
 
 
 @report.command()
 @pass_cli
 def guardian(cli):
-    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/analyzer-results', query_list=['affected=true&sorters[0][field]=name',
-                                                                                  'sorters[0][dir]=asc']))
+    result = cli.do_GET(f'/api/report/{cli.ufid}/analyzer-results', query_list=['affected=true&sorters[0][field]=name',
+                                                                                  'sorters[0][dir]=asc'])
+    cli.echo(result)
+    return(result)
 
 
 @report.command()
 @pass_cli
 def sbom(cli):
-    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/components/pathmatches'))
+    result = cli.do_GET(f'/api/report/{cli.ufid}/components/pathmatches')
+    cli.echo(result)
+    return(result)
 
 
 @report.command(name='code-summary')
 @pass_cli
 def code_summary(cli):
     cli.limit = 100
-    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/vulnerable-files', get_all=True,
-                          query_list=['sorters[0][field]=id', 'sorters[0][dir]=asc']))
+    result = cli.do_GET(f'/api/report/{cli.ufid}/vulnerable-files', get_all=True,
+                          query_list=['sorters[0][field]=id', 'sorters[0][dir]=asc'])
+    cli.echo(result)
+    return(result)
 
 
 @report.command(name='code-static')
@@ -263,7 +289,9 @@ def code_static(cli, exid, path):
     if exid and path:
         query_list.append(f'path={path}')
 
-    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/vulnerable-files/{exid}', query_list=query_list))
+    result = cli.do_GET(f'/api/report/{cli.ufid}/vulnerable-files/{exid}', query_list=query_list)
+    cli.echo(result)
+    return(result)
 
 
 @report.command(name='code-emulated')
@@ -275,39 +303,82 @@ def code_emulated(cli, exid, path):
     if exid and path:
         query_list.append(f'path={path}')
 
-    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/emulated-files/{exid}', query_list=query_list))
+    result = cli.do_GET(f'/api/report/{cli.ufid}/emulated-files/{exid}', query_list=query_list)
+    cli.echo(result)
+    return(result)
 
 
 @report.command()
 @pass_cli
 def certificates(cli):
-    click.echo(cli.do_GET(f'/api/report/crypto/{cli.ufid}/certificates', get_all=True))
+    result = cli.do_GET(f'/api/report/crypto/{cli.ufid}/certificates', get_all=True)
+    cli.echo(result)
+    return(result)
 
 
 @report.command(name='private-keys')
 @pass_cli
-def privatekeys(cli):
-    click.echo(cli.do_GET(f'/api/report/crypto/{cli.ufid}/privateKeys', get_all=True))
+def private_keys(cli):
+    result = cli.do_GET(f'/api/report/crypto/{cli.ufid}/privateKeys', get_all=True)
+    cli.echo(result)
+    return(result)
 
 
 @report.command(name='public-keys')
 @pass_cli
 def public_keys(cli):
-    click.echo(cli.do_GET(f'/api/report/crypto/{cli.ufid}/publicKeys', get_all=True))
+    result = cli.do_GET(f'/api/report/crypto/{cli.ufid}/publicKeys', get_all=True)
+    cli.echo(result)
+    return(result)
 
 
 @report.command(name='binary-hardening')
 @pass_cli
 def binary_hardening(cli):
-    click.echo(cli.do_GET(f'/api/report/{cli.ufid}/binary-hardening', get_all=True))
+    result = cli.do_GET(f'/api/report/{cli.ufid}/binary-hardening', get_all=True)
+    cli.echo(result)
+    return(result)
 
+@report.command(name='check-policy')
+@click.option('--policy-yaml', metavar='FILE', type=click.Path(), help='Centrifuge policy yaml file.', required=True)
+@click.pass_context
+@pass_cli
+def check_policy(cli, ctx, policy_yaml):
+    outfmt = cli.outfmt
+    cli.outfmt = 'json'
+    cli.echo_enabled = False
+    cli.limit = 1000
+    certificates_json = json.loads(ctx.invoke(certificates))
+    private_keys_json = json.loads(ctx.invoke(private_keys))
+    binary_hardening_json = json.loads(ctx.invoke(binary_hardening))
+    guardian_json = json.loads(ctx.invoke(guardian))
+    code_summary_json = json.loads(ctx.invoke(code_summary))
+    passhash_json = json.loads(ctx.invoke(passhash))
 
+    policy_obj = CentrifugePolicyCheck(certificates_json, 
+                                       private_keys_json,
+                                       binary_hardening_json,
+                                       guardian_json,
+                                       code_summary_json,
+                                       passhash_json)
+    
+    policy_obj.check_rules(policy_yaml)
+
+    result = policy_obj.generate_csv( )
+    if outfmt == 'json':
+        result = policy_obj.generate_json( )
+
+    cli.echo_enabled = True
+    cli.outfmt = outfmt
+    cli.echo(result)
+    return(result)
+    
 @cli.command()
 @click.option('--make', metavar='MAKE', help='Manufacturer Name', required=True)
 @click.option('--model', metavar='MODEL', help='Model Number', required=True)
 @click.option('--version', metavar='VERSION', help='Firmware Version Number', required=True)
 @click.option('--chunksize', default=2000000, help='Chunk size in bytes to split the file up into when uploading. Default: 2MB')
-@click.argument('filename', required=True)
+@click.argument('filename', type=click.Path(), required=True)
 @pass_cli
 def upload(cli, make, model, version, chunksize, filename):
     with open(filename, 'rb') as upload_file:
@@ -336,8 +407,15 @@ def upload(cli, make, model, version, chunksize, filename):
                 'dzchunkbytesoffset': chunkOffset
             }
             res = cli.do_POST('/api/upload/chunky', data, files=files)
-        ufid = res.json()['ufid']
-        click.echo(f"Upload complete. Report id is {ufid}")
+        ufid = res.json()['ufid'] 
+        result = f'Upload complete. Report id is {ufid}'
+        if cli.outfmt == 'json':
+            result = res.text
+        elif cli.outfmt == 'csv':
+            result = f'id,\n{ufid}\n'
+        
+        cli.echo(result)
+        return(result)
 
 
 @cli.group()
@@ -349,7 +427,9 @@ def users(cli):
 @users.command(name="list")
 @pass_cli
 def user_list(cli):
-    click.echo(cli.do_GET('/api/user'))
+    result = cli.do_GET('/api/user')
+    cli.echo(result)
+    return(result)
 
 
 @users.command()
@@ -383,7 +463,9 @@ def new(cli, email, password, orgid, admin, expires, no_expire):
         'isPermanent': isPermanent,
         'expiresAt': expiresAt}
 
-    click.echo(cli.do_POST('/api/user', post_data))
+    result = cli.do_POST('/api/user', post_data)
+    cli.echo(result)
+    return(result)
 
 
 @cli.group()
@@ -396,7 +478,9 @@ def user(cli, userid):
 @user.command()
 @pass_cli
 def delete(cli):
-    click.echo(cli.do_DELETE(f'/api/user/{cli.userid}'))
+    result = cli.do_DELETE(f'/api/user/{cli.userid}')
+    cli.echo(result)
+    return(result)
 
 
 @user.command(name='set-expiration')
@@ -413,7 +497,9 @@ def set_expiration(cli, expires):
         'isPermanent': False,
         'expiresAt': expiresAt}
 
-    click.echo(cli.do_PUT(f'/api/user/{cli.userid}', put_data))
+    result = cli.do_PUT(f'/api/user/{cli.userid}', put_data)
+    cli.echo(result)
+    return(result)
 
 
 @user.command(name='set-password')
@@ -423,7 +509,9 @@ def set_password(cli, password):
     put_data = {
         'password': password}
 
-    click.echo(cli.do_PUT(f'/api/user/{cli.userid}', put_data))
+    result = cli.do_PUT(f'/api/user/{cli.userid}', put_data)
+    cli.echo(result)
+    return(result)
 
 
 @user.command(name='set-organization-id')
@@ -433,7 +521,9 @@ def set_organization_id(cli, orgid):
     put_data = {
         'organizationId': int(orgid)}
 
-    click.echo(cli.do_PUT(f'/api/user/{cli.userid}', put_data))
+    result = cli.do_PUT(f'/api/user/{cli.userid}', put_data)
+    cli.echo(result)
+    return(result)
 
 
 @user.command(name='set-email')
@@ -443,7 +533,9 @@ def set_email(cli, email):
     put_data = {
         'username': email}
 
-    click.echo(cli.do_PUT(f'/api/user/{cli.userid}', put_data))
+    result = cli.do_PUT(f'/api/user/{cli.userid}', put_data)
+    cli.echo(result)
+    return(result)
 
 
 @user.command(name='make-permanent')
@@ -453,7 +545,9 @@ def make_permanent(cli):
         'isPermanent': True,
         'expiresAt': "-"}
 
-    click.echo(cli.do_PUT(f'/api/user/{cli.userid}', put_data))
+    result = cli.do_PUT(f'/api/user/{cli.userid}', put_data)
+    cli.echo(result)
+    return(result)
 
 
 @user.command(name='make-admin')
@@ -462,7 +556,9 @@ def make_admin(cli):
     put_data = {
         'isAdmin': True}
 
-    click.echo(cli.do_PUT(f'/api/user/{cli.userid}', put_data))
+    result = cli.do_PUT(f'/api/user/{cli.userid}', put_data)
+    cli.echo(result)
+    return(result)
 
 
 @cli.group()
@@ -474,7 +570,9 @@ def orgs(cli):
 @orgs.command(name="list")
 @pass_cli
 def orgs_list(cli):
-    click.echo(cli.do_GET('/api/organization'))
+    result = cli.do_GET('/api/organization')
+    cli.echo(result)
+    return(result)
 
 
 @orgs.command()
@@ -485,7 +583,9 @@ def new(cli, ownerid, name):
     post_data = {
         'ownerId': ownerid,
         'name': name}
-    click.echo(cli.do_POST('/api/organization', post_data))
+    result = cli.do_POST('/api/organization', post_data)
+    cli.echo(result)
+    return(result)
 
 
 @cli.group()
@@ -504,8 +604,9 @@ def change(cli, ownerid, name):
         'name': name,
         'ownerId': int(ownerid)}
 
-    click.echo(cli.do_PUT(f'/api/organization/{cli.orgid}', put_data))
-
+    result = cli.do_PUT(f'/api/organization/{cli.orgid}', put_data)
+    cli.echo(result)
+    return(result)
 
 if __name__ == '__main__':
     cli()
