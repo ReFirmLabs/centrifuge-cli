@@ -1,0 +1,17 @@
+policyVersion: 1.0
+rules:
+  certificates:
+    expired:
+      allowed: false
+  privateKeys:
+    allowed: false
+  passwordHashes:
+    weakAlgorithms: [des, md5]
+  code:
+    flaws:
+      allowed: false
+  guardian:
+    cvssScoreThreshold: 9.0
+  binaryHardening:
+    requiredFeatures: [NX, PIE, STRIPPED]
+    include: [/opt/vendor/bin/*, /usr/lib/*]

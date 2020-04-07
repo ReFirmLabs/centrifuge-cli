@@ -113,7 +113,7 @@ class CentrifugePolicyCheck(object):
                         if int(time.time()) > cert_expiry_timestamp:
                             count += 1
                     else:
-                        self.verboseprint("Certificate {} is exception".format(cert["rflid"]))
+                        raise RuntimeError(f'Certificate {cert["rflid"]} is exception')
                 if count > 0:
                     return "Fail"
                 else:
@@ -155,7 +155,7 @@ class CentrifugePolicyCheck(object):
                 if obj.get(feature.lower()) != "full":
                     return False
             else:
-                self.verboseprint("{} feature is not a valid one".format(feature))
+                self.verboseprint(f'{feature} feature is not a valid one')
         return True
 
     def checkBinaryHardeningRule(self, value):

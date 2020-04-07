@@ -49,8 +49,11 @@ class Cli(object):
 
         self.ssl_verify = not(ssl_no_verify)
 
-    def build_url(self, path, query_list):
-        default_query = [f'limit={self.limit}',
+    def build_url(self, path, query_list, limit):
+        # vulnerable-files does not properly support the limit parameter :facepalm:
+        if ('vulnerable-files' in path):
+            limit = 100
+        default_query = [f'limit={limit}',
                          f'authtoken={self.apikey}']
         if query_list is not None:
             default_query.extend(query_list)
@@ -58,49 +61,43 @@ class Cli(object):
         query = '&'.join(default_query)
         return urlunparse((self.endpoint_scheme, self.endpoint_netloc, path, None, query, None))
 
-    def do_GET(self, path, query_list=None, get_all=False):
-
+    def do_GET(self, path, query_list=None, paginated=False):
         # handle paginated queries
-        if get_all:
+        if paginated:
             results = []
             total = 0
             page = 1
             base_query_list = query_list if query_list else []
             while True:
                 updated_query_list = base_query_list + [f'page={page}']
-                url = self.build_url(path, updated_query_list)
+                url = self.build_url(path, updated_query_list, 100)
                 try:
                     res = requests.get(url, verify=self.ssl_verify)
-                except requests.exceptions.ConnectionError as ex:
-                    return f'{{statusCode: 502, message: Could not connect to host: {self.endpoint_netloc}}}'
-                if res.status_code != 200:
-                    if res.status_code == 403:
-                        return "{statusCode: 403, message: User not authorized}"
-                    return res.text
+                    res.raise_for_status()
+                except requests.exceptions.HTTPError as err:
+                    raise SystemExit(err)
 
                 data = res.json()
-                # handle binary hardness specifically while that API endpoint is not compliant with the rest
+                # handle binary hardness specifically while that API endpoint is not compliant with the rest :facepalm:
                 data = data['checkSecs'] if 'checkSecs' in data else data
                 results.extend(data['results'])
                 count = data['count']
-                total += self.limit
+                total += len(data['results'])
                 page += 1
 
-                if total >= count:
+                if total >= count or (self.limit > -1 and total >= self.limit):
                     break
 
-            return json.dumps({'count': count, 'results': results}, indent=2, sort_keys=True)
+            return json.dumps({'count': total, 'results': results}, indent=2, sort_keys=True)
 
         else:
-            url = self.build_url(path, query_list)
+            url = self.build_url(path, query_list, self.limit)
             try:
                 res = requests.get(url, verify=self.ssl_verify)
-            except requests.exceptions.ConnectionError as ex:
-                return f'{{statusCode: 502, message: Could not connect to host: {self.endpoint_netloc}}}'
-            if res.status_code != 200:
-                if res.status_code == 403:
-                    return "{statusCode: 403, message: User not authorized}"
-                return res.text
+                res.raise_for_status()
+            except requests.exceptions.HTTPError as err:
+                raise SystemExit(err)
+
             data = res.json()
             data = data['checkSecs'] if 'checkSecs' in data else data
 
@@ -126,40 +123,32 @@ class Cli(object):
         return df
 
     def do_POST(self, path, data, files=None, query_list=None):
-        url = self.build_url(path, query_list)
+        url = self.build_url(path, query_list, self.limit)
         try:
             res = requests.post(url, data=data, files=files)
-        except requests.exceptions.ConnectionError as ex:
-            return f'{{statusCode: 502, message: Could not connect to host: {self.endpoint_netloc}}}'
-        if res.status_code != 200:
-            if res.status_code == 403:
-                return "{statusCode: 403, message: User not authorized}"
-            return res.text
+            res.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            raise SystemExit(err)
+
         return res
 
     def do_PUT(self, path, data, query_list=None):
-        url = self.build_url(path, query_list)
+        url = self.build_url(path, query_list, self.limit)
         try:
             res = requests.put(url, data=data)
-        except requests.exceptions.ConnectionError as ex:
-            return f'{{statusCode: 502, message: Could not connect to host: {self.endpoint_netloc}}}'
-        if res.status_code != 200:
-            if res.status_code == 403:
-                return "{statusCode: 403, message: User not authorized}"
-            return res.text
+            res.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            raise SystemExit(err)
+
         return res
 
     def do_DELETE(self, path, query_list=None):
-        url = self.build_url(path, query_list)
+        url = self.build_url(path, query_list, self.limit)
         try:
             res = requests.delete(url)
-        except requests.exceptions.ConnectionError as ex:
-            return f'{{statusCode: 502, message: Could not connect to host: {self.endpoint_netloc}}}'
-        if res.status_code != 200:
-            if res.status_code == 403:
-                return "{statusCode: 403, message: User not authorized}"
-            return ('Error occurred, could not delete')
-
+            res.raise_for_status()
+        except requests.exceptions.HTTPError as err:
+            raise SystemExit(err)
         return('Deleted')
 
     def echo(self, message):
@@ -275,9 +264,8 @@ def sbom(cli):
 @report.command(name='code-summary')
 @pass_cli
 def code_summary(cli):
-    cli.limit = 100
-    result = cli.do_GET(f'/api/report/{cli.ufid}/vulnerable-files', get_all=True,
-                        query_list=['sorters[0][field]=id', 'sorters[0][dir]=asc'])
+    result = cli.do_GET(f'/api/report/{cli.ufid}/vulnerable-files',
+                        query_list=['sorters[0][field]=id', 'sorters[0][dir]=asc'], paginated=True)
     cli.echo(result)
     return(result)
 
@@ -313,7 +301,7 @@ def code_emulated(cli, exid, path):
 @report.command()
 @pass_cli
 def certificates(cli):
-    result = cli.do_GET(f'/api/report/crypto/{cli.ufid}/certificates', get_all=True)
+    result = cli.do_GET(f'/api/report/crypto/{cli.ufid}/certificates', paginated=True)
     cli.echo(result)
     return(result)
 
@@ -321,7 +309,7 @@ def certificates(cli):
 @report.command(name='private-keys')
 @pass_cli
 def private_keys(cli):
-    result = cli.do_GET(f'/api/report/crypto/{cli.ufid}/privateKeys', get_all=True)
+    result = cli.do_GET(f'/api/report/crypto/{cli.ufid}/privateKeys', paginated=True)
     cli.echo(result)
     return(result)
 
@@ -329,7 +317,7 @@ def private_keys(cli):
 @report.command(name='public-keys')
 @pass_cli
 def public_keys(cli):
-    result = cli.do_GET(f'/api/report/crypto/{cli.ufid}/publicKeys', get_all=True)
+    result = cli.do_GET(f'/api/report/crypto/{cli.ufid}/publicKeys', paginated=True)
     cli.echo(result)
     return(result)
 
@@ -337,7 +325,7 @@ def public_keys(cli):
 @report.command(name='binary-hardening')
 @pass_cli
 def binary_hardening(cli):
-    result = cli.do_GET(f'/api/report/{cli.ufid}/binary-hardening', get_all=True)
+    result = cli.do_GET(f'/api/report/{cli.ufid}/binary-hardening', paginated=True)
     cli.echo(result)
     return(result)
 
@@ -350,7 +338,7 @@ def check_policy(cli, ctx, policy_yaml):
     outfmt = cli.outfmt
     cli.outfmt = 'json'
     cli.echo_enabled = False
-    cli.limit = 1000
+    cli.limit = -1
     certificates_json = json.loads(ctx.invoke(certificates))
     private_keys_json = json.loads(ctx.invoke(private_keys))
     binary_hardening_json = json.loads(ctx.invoke(binary_hardening))
