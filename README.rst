@@ -195,3 +195,20 @@ To delete a firmware:
 .. code-block:: bash
 
     $ centrifuge report --ufid=<REPORT_ID> delete
+
+
+Checking Against a Policy YAML
+------------------------------
+
+You can check that the results of a firmware analysis are within compliance criteria
+defined in a yaml file. Example usage:
+
+.. code-block:: bash
+
+    $ centrifuge report --ufid=<REPORT_ID> check-policy --policy-yaml=<PATH TO YAML>
+
+
+
+More information on this feature can be found in the `Policy Documentation`_.
+
+.. _Policy Documentation: docs/POLICY.md

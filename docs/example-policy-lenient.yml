@@ -1,0 +1,14 @@
+policyVersion: 1.0
+rules:
+  certificates:
+    expired:
+      allowed: true
+  passwordHashes:
+    weakAlgorithms: [des, md5]
+  privateKeys:
+    allowed: true
+  code:
+    flaws:
+      allowed: true
+  guardian:
+    cvssScoreThreshold: 9.0

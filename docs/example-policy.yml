@@ -1,0 +1,54 @@
+# version of the policy specification
+policyVersion: 1.0
+
+# Define the policy rules to pass or fail a finished Centrifuge report.
+
+# All rule and rule exceptions are optional and will only be applied if
+# specified in this file. If a rule is not specified, it will be reported
+# as "No policy specified" in the results
+
+rules:
+
+  certificates:
+    expired:
+      allowed: false
+    # optional list of files that are omitted from this rule
+    exceptions: 
+      - /etc/ssl/*
+      - /opt/vendor/certs/*
+
+  privateKeys:
+    allowed: false
+    # optional list of files that are omitted from this rule
+    exceptions:
+      - /usr/*
+
+  passwordHashes:
+    # any hashes with the following algorithms will fail the policy check
+    weakAlgorithms:
+      - des
+      - md5
+
+  code:
+    flaws:
+      allowed: false
+    # optional list of files that are omitted from this rule
+    exceptions:
+     - /opt/vendor/*
+
+  guardian:
+    # any CVEs found at or above this threshold will cause the policy check to fail
+    cvssScoreThreshold: 9.0
+
+  binaryHardening:
+    # a list of hardening features required for ELF binaries
+    # supported features: NX, PIE, RELRO, CANARY, STRIPPED
+    requiredFeatures:
+      - NX
+      - PIE
+      - STRIPPED
+    # optional whitelist of binaries to check for above features.
+    # if omitted, all binaries will be checked
+    include:
+      - /opt/vendor/*
+      - /root/*
