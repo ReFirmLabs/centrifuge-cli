@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 import json
 import math
 import uuid
@@ -75,7 +76,11 @@ class Cli(object):
                     res = requests.get(url, verify=self.ssl_verify)
                     res.raise_for_status()
                 except requests.exceptions.HTTPError as err:
-                    raise SystemExit(err)
+                    if res.status_code == 403:
+                        self.echo(f'Access Denied (url: {url})', err=True)
+                        sys.exit(-1)
+                    else:
+                        raise SystemExit(err)
 
                 data = res.json()
                 # handle binary hardness specifically while that API endpoint is not compliant with the rest :facepalm:
@@ -96,7 +101,11 @@ class Cli(object):
                 res = requests.get(url, verify=self.ssl_verify)
                 res.raise_for_status()
             except requests.exceptions.HTTPError as err:
-                raise SystemExit(err)
+                if res.status_code == 403:
+                    self.echo(f'Access Denied (url: {url})', err=True)
+                    sys.exit(-1)
+                else:
+                    raise SystemExit(err)
 
             data = res.json()
             data = data['checkSecs'] if 'checkSecs' in data else data
@@ -128,7 +137,11 @@ class Cli(object):
             res = requests.post(url, data=data, files=files)
             res.raise_for_status()
         except requests.exceptions.HTTPError as err:
-            raise SystemExit(err)
+            if res.status_code == 403:
+                self.echo(f'Access Denied (url: {url})', err=True)
+                sys.exit(-1)
+            else:
+                raise SystemExit(err)
 
         return res
 
@@ -138,7 +151,11 @@ class Cli(object):
             res = requests.put(url, data=data)
             res.raise_for_status()
         except requests.exceptions.HTTPError as err:
-            raise SystemExit(err)
+            if res.status_code == 403:
+                self.echo(f'Access Denied (url: {url})', err=True)
+                sys.exit(-1)
+            else:
+                raise SystemExit(err)
 
         return res
 
@@ -148,12 +165,17 @@ class Cli(object):
             res = requests.delete(url)
             res.raise_for_status()
         except requests.exceptions.HTTPError as err:
-            raise SystemExit(err)
+            if res.status_code == 403:
+                self.echo(f'Access Denied (url: {url})', err=True)
+                sys.exit(-1)
+            else:
+                raise SystemExit(err)
+
         return('Deleted')
 
-    def echo(self, message):
-        if self.echo_enabled:
-            click.echo(message)
+    def echo(self, message, err=False):
+        if self.echo_enabled or err is True:
+            click.echo(message, err=err)
 
 
 pass_cli = click.make_pass_decorator(Cli)
