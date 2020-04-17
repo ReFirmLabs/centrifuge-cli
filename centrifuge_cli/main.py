@@ -14,6 +14,7 @@ from datetime import datetime
 from collections.abc import MutableMapping
 from urllib.parse import urlparse, urlunparse
 from centrifuge_cli.policy import CentrifugePolicyCheck
+from centrifuge_cli.stats import CentrifugeStats
 from centrifuge_cli import __version__ as PACKAGE_VERSION
 
 
@@ -207,6 +208,42 @@ def reports(cli):
 def list_command(cli):
     result = cli.do_GET('/api/upload', query_list=['sorters[0][field]=id',
                                                    'sorters[0][dir]=desc'])
+    cli.echo(result)
+    return(result)
+
+
+def get_stats_obj(cli, ctx):
+    outfmt = cli.outfmt
+    cli.outfmt = 'json'
+    cli.echo_enabled = False
+    cli.limit = -1
+
+    reports_json = json.loads(ctx.invoke(list_command))
+    users_json = json.loads(ctx.invoke(users_list))
+
+    stats_obj = CentrifugeStats(reports_json, users_json)
+
+    cli.echo_enabled = True
+    cli.outfmt = outfmt
+    return(stats_obj)
+
+
+@reports.command(name='stats-summary')
+@click.pass_context
+@pass_cli
+def stats_summary(cli, ctx):
+    stats_obj = get_stats_obj(cli, ctx)
+    result = stats_obj.get_summary(cli.outfmt)
+    cli.echo(result)
+    return(result)
+
+
+@reports.command(name='stats-detailed')
+@click.pass_context
+@pass_cli
+def stats_detailed(cli, ctx):
+    stats_obj = get_stats_obj(cli, ctx)
+    result = stats_obj.get_detailed(cli.outfmt, cli.endpoint_scheme, cli.endpoint_netloc)
     cli.echo(result)
     return(result)
 
@@ -440,7 +477,7 @@ def users(cli):
 
 @users.command(name="list")
 @pass_cli
-def user_list(cli):
+def users_list(cli):
     result = cli.do_GET('/api/user')
     cli.echo(result)
     return(result)
