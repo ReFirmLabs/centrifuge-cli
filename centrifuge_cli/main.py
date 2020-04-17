@@ -212,7 +212,7 @@ def list_command(cli):
     return(result)
 
 
-def get_stats_obj(cli, ctx):
+def get_stats_obj(cli, ctx, include_individuals):
     outfmt = cli.outfmt
     cli.outfmt = 'json'
     cli.echo_enabled = False
@@ -221,7 +221,7 @@ def get_stats_obj(cli, ctx):
     reports_json = json.loads(ctx.invoke(list_command))
     users_json = json.loads(ctx.invoke(users_list))
 
-    stats_obj = CentrifugeStats(reports_json, users_json)
+    stats_obj = CentrifugeStats(reports_json, users_json, include_individuals)
 
     cli.echo_enabled = True
     cli.outfmt = outfmt
@@ -229,20 +229,22 @@ def get_stats_obj(cli, ctx):
 
 
 @reports.command(name='stats-summary')
+@click.option('--include-individuals', help='Will include statistics for accounts without an Organization', is_flag=True)
 @click.pass_context
 @pass_cli
-def stats_summary(cli, ctx):
-    stats_obj = get_stats_obj(cli, ctx)
+def stats_summary(cli, ctx, include_individuals):
+    stats_obj = get_stats_obj(cli, ctx, include_individuals)
     result = stats_obj.get_summary(cli.outfmt)
     cli.echo(result)
     return(result)
 
 
 @reports.command(name='stats-detailed')
+@click.option('--include-individuals', help='Will include statistics for accounts without an Organization', is_flag=True)
 @click.pass_context
 @pass_cli
-def stats_detailed(cli, ctx):
-    stats_obj = get_stats_obj(cli, ctx)
+def stats_detailed(cli, ctx, include_individuals):
+    stats_obj = get_stats_obj(cli, ctx, include_individuals)
     result = stats_obj.get_detailed(cli.outfmt, cli.endpoint_scheme, cli.endpoint_netloc)
     cli.echo(result)
     return(result)

@@ -8,7 +8,7 @@ from urllib.parse import urlparse, urlunparse
 
 class CentrifugeStats(object):
 
-    def __init__(self, reports_json, users_json):
+    def __init__(self, reports_json, users_json, include_individuals=False):
         self.reports_json = reports_json
         self.users_json = users_json
 
@@ -17,6 +17,8 @@ class CentrifugeStats(object):
             org = user['organization']
             if org is not None:
                 self.user_id_to_org_name[user['id']] = org
+            elif include_individuals:
+                self.user_id_to_org_name[user['id']] = user['username']
 
     def get_summary(self, outfmt):
         org_name_to_upload_md5 = {}
