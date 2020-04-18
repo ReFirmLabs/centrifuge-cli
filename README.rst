@@ -212,3 +212,23 @@ defined in a yaml file. Example usage:
 More information on this feature can be found in the `Policy Documentation`_.
 
 .. _Policy Documentation: docs/POLICY.md
+
+Gathering Upload Statistics
+---------------------------
+
+For deployments that support multiple organizations or business units we have the ability
+to gather useful statistics for the uploaded firmware based on organization. One command 
+will simply give you the total number of firmware that each organization uploaded, the other
+command will give more detailed information about each upload. 
+
+To get upload count statistics:
+
+.. code-block:: bash
+
+    $ centrifuge reports stats-summary
+
+To get detailed upload statistics:
+
+.. code-block:: bash
+
+    $ centrifuge reports stats-detailed
