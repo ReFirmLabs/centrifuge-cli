@@ -43,7 +43,7 @@ To query the list of available reports:
     $ centrifuge reports list
 
 Under the hood the Centrifuge CLI is using python Pandas data frames to report
-the results to the user. Since the API is json, which has heirarchical structure
+the results to the user. Since the API is json, which has hierarchical structure
 to it, we have chosen to flatten all the results into a column/row format for
 viewing inside of a terminal or for importing into spreadsheets, etc. However
 the cli can also output CSV, and the original json results. For example:
@@ -60,7 +60,7 @@ JSON:
 
     $ centrifuge --outfmt=json reports list
 
-When generating the human-readable Pandas output or when genering CSV you have
+When generating the human-readable Pandas output or when generating CSV you have
 the option of choosing which columns you wish to export. For example, to display
 only the original filename and model number of the firmware that was uploaded: 
 
