@@ -28,11 +28,11 @@ centrifuge report --ufid=<REPORT ID> check-policy --policy-yaml my-policy.yml
 
 # Check your policy against Centrifuge report 1234 and output json format
 centrifuge --outfmt json report --ufid=<REPORT ID> check-policy --policy-yaml my-policy.yml
-```
 
-Other command options:
-```--verbose``` : outputs details on compliance check logic
-```--explain``` : adds "reasons" column to all reports which explains why policy failed / what needs to be fixed
+# Other command options:
+--explain : adds "reasons" column to all reports which explains why policy failed / what needs to be fixed
+--verbose : outputs details on compliance check logic
+```
 
 ## Policy Rule Definition
 
