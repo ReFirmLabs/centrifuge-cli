@@ -241,18 +241,20 @@ class CentrifugePolicyCheck(object):
 
     def checkPasswordHashRule(self, value):
         self.verboseprint("Checking Password Hash Rule...")
-        count = 0
+        rule_passed = True
         json_data = self.passhash_json
         if json_data.get("count") > 0:
+            if not value.get("allowUserAccounts", True):
+                self.verboseprint(f'...failing allowUserAccounts - identified {json_data.get("count")} accounts')
+                rule_passed = False
             for hash_obj in json_data.get("results"):
                 if hash_obj.get("algorithm") in value.get("weakAlgorithms", []):
-                    count += 1
-            if count > 0:
-                return "Fail"
-            else:
-                return "Pass"
-        else:
+                    self.verboseprint(f'...failing weakAlgorithms {hash_obj["algorithm"]} for user {hash_obj["username"]}')
+                    rule_passed = False
+        if rule_passed:
             return "Pass"
+        else:
+            return "Fail"
 
     def call_policy_method(self, policy_name, ruledef):
         policy_method = getattr(self, POLICY_DETAIL_MAPPING.get(policy_name).get("method"))

@@ -104,8 +104,13 @@ Firmware images containing any private keys will fail this policy check.
 ### Rule: Weak Password Hashes
 
 Firmware images containing any password hashes with the algorithms defined below will fail.
+Set `allowUserAccounts: false` to fail if any user accounts are present, regardless of hash algorithm.
 ```
   passwordHashes:
+    # whether defined user accounts are allowed or not
+    allowUserAccounts: true
+
+    # any hashes with the following algorithms will fail the policy check
     weakAlgorithms:
       - des
       - md5

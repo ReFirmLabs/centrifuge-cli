@@ -24,6 +24,9 @@ rules:
       - /usr/*
 
   passwordHashes:
+    # whether defined user accounts are allowed or not
+    allowUserAccounts: false
+
     # any hashes with the following algorithms will fail the policy check
     weakAlgorithms:
       - des
@@ -36,7 +39,7 @@ rules:
 
       # allow critical (emulated) flaws
       allowCritical: false
-      
+
     # optional list of files that are omitted from this rule
     exceptions:
       - /opt/vendor/*
