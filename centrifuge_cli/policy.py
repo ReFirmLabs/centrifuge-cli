@@ -157,27 +157,22 @@ class CentrifugePolicyCheck(object):
 
     def checkBinaryHardeningRule(self, value):
         self.verboseprint("Checking Binary Hardening Rule...")
-        count = 0
+        rule_passed = True
+        includes = value.get("include", [])
         json_data = self.binary_hardening_json
         if json_data.get("count") > 0:
             for obj in json_data.get("results"):
-                exceptions = value.get("include", [])
-                path_included = self.match_regex_against_path(exceptions, obj["paths"])
-                if path_included:
-                    rule_passed = self.check_files_for_binary_hardening(obj, value)
-                    if not rule_passed:
-                        count += 1
-                else:
-                    # Check each and every file against binary hardening
-                    rule_passed = self.check_files_for_binary_hardening(obj, value)
-                    if not rule_passed:
-                        count += 1
-            if count > 0:
-                return "Fail"
-            else:
-                return "Pass"
-        else:
+                if includes:
+                    path_included = self.match_regex_against_path(includes, obj["paths"])
+                    if not path_included:
+                        continue
+                if not self.check_files_for_binary_hardening(obj, value):
+                    self.verboseprint(f'...failing: invalid binary hardening settings at {obj["paths"][0]}')
+                    rule_passed = False
+        if rule_passed:
             return "Pass"
+        else:
+            return "Fail"
 
     def checkGuardianRule(self, value):
         self.verboseprint("Checking Guardian Rule...")

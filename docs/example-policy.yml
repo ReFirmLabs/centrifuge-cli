@@ -66,5 +66,6 @@ rules:
     # optional whitelist of binaries to check for above features.
     # if omitted, all binaries will be checked
     include:
+      - /kernel/drivers/*
       - /opt/vendor/*
       - /root/*
