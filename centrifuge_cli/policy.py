@@ -82,68 +82,65 @@ class CentrifugePolicyCheck(object):
 
     def match_regex_against_path(self, exception_regex, path_list):
         """
-        Method to match the regex with list of paths. Paths are unix system path.
+        Method to match the list of regexes with list of paths. Paths are unix system path.
         """
-        exception_in_path = []
+        exceptions_in_path = []
         if exception_regex:
             for regex in exception_regex:
                 if regex:
-                    exception_in_path = list(
-                        filter(lambda path: re.search(regex, path),
-                               list(map(lambda path: path, path_list)))
-                    )
-        return exception_in_path
+                    exceptions = list(
+                        filter(lambda path: re.search(regex, path), path_list))
+                    exceptions_in_path = exceptions_in_path + exceptions
+        return exceptions_in_path
 
     def checkCertificateRule(self, value):
         self.verboseprint("Checking Certificate Rule...")
-        count = 0
+        rule_passed = True
         json_data = self.certificates_json
         if not value.get('expired', {}).get('allowed'):
             if json_data.get("count") > 0:
                 # Remove exceptions from results if any
                 for cert in json_data.get("results"):
                     exceptions = value.get("exceptions", [])
-                    exception_in_path = self.match_regex_against_path(exceptions, cert["paths"])
-                    if exception_in_path:
-                        for path_ex in exception_in_path:
+                    exceptions_in_path = self.match_regex_against_path(exceptions, cert["paths"])
+                    if exceptions_in_path:
+                        for path_ex in exceptions_in_path:
+                            self.verboseprint(f'...skipping certificate found at {path_ex}')
                             cert["paths"].remove(path_ex)
                     if cert["paths"]:
                         # Check if certificate is expired.
                         cert_expiry_timestamp = int(cert["validityEnd"][:-3])
                         if int(time.time()) > cert_expiry_timestamp:
-                            count += 1
-                    else:
-                        raise RuntimeError(f'Certificate {cert["rflid"]} is exception')
-                if count > 0:
-                    return "Fail"
-                else:
-                    return "Pass"
-            else:
-                return "Pass"
+                            rule_passed = False
+                            for path in cert["paths"]:
+                                self.verboseprint(f'...failing: certificate expired at {path}')
+        if rule_passed:
+            return "Pass"
+        else:
+            return "Fail"
 
     def checkPrivateKeyRule(self, value):
         self.verboseprint("Checking Private Key Rule...")
-        count = 0
+        rule_passed = True
         json_data = self.private_keys_json
         if not value.get('allowed'):
             if json_data.get("count") > 0:
                 # Remove exceptions from results if any
                 for pk in json_data.get("results"):
                     exceptions = value.get("exceptions", [])
-                    exception_in_path = self.match_regex_against_path(exceptions, pk["paths"])
-                    if exception_in_path:
-                        for path_ex in exception_in_path:
+                    exceptions_in_path = self.match_regex_against_path(exceptions, pk["paths"])
+                    if exceptions_in_path:
+                        for path_ex in exceptions_in_path:
+                            self.verboseprint(f'...skipping key found at {path_ex}')
                             pk["paths"].remove(path_ex)
-                    if not pk["paths"]:
-                        count += 1
-                if len(json_data["results"]) != count:
-                    return "Fail"
-                else:
-                    return "Pass"
-            else:
-                return "Pass"
-        else:
+                    if pk["paths"]:
+                        rule_passed = False
+                        for path in pk["paths"]:
+                            self.verboseprint(f'...failing: private key found at {path}')
+        if rule_passed:
             return "Pass"
+        else:
+            return "Fail"
 
     def check_files_for_binary_hardening(self, obj, value):
         boolean_feature = ("nx", "canary", "pie", "stripped")
@@ -201,11 +198,11 @@ class CentrifugePolicyCheck(object):
                         self.verboseprint(f'...skipping exception {guardian_obj["path"]}')
                         continue
                 if float(guardian_obj["severity"]) > cvssScoreThreshold:
-                    self.verboseprint(f'...failing cvssScoreThreshold {guardian_obj["severity"]} for {guardian_obj["component"]} at {guardian_obj["path"]}')
+                    self.verboseprint(f'...failing: cvssScoreThreshold {guardian_obj["severity"]} for {guardian_obj["component"]} at {guardian_obj["path"]}')
                     rule_passed = False
                 cveAge = int(guardian_obj["name"][4:8])
                 if cveAge <= cveAgeThreshold:
-                    self.verboseprint(f'...failing cveAgeThreshold {guardian_obj["name"]} for {guardian_obj["component"]} at {guardian_obj["path"]}')
+                    self.verboseprint(f'...failing: cveAgeThreshold {guardian_obj["name"]} for {guardian_obj["component"]} at {guardian_obj["path"]}')
                     rule_passed = False
         if rule_passed:
             return "Pass"
@@ -229,10 +226,10 @@ class CentrifugePolicyCheck(object):
                             self.verboseprint(f'...skipping exception {code_obj["path"]}')
                             continue
                     if not allowed and code_obj["totalFlaws"] > 0:
-                        self.verboseprint(f'...failing {code_obj["totalFlaws"]} total flaws in {code_obj["path"]}')
+                        self.verboseprint(f'...failing: {code_obj["totalFlaws"]} total flaws in {code_obj["path"]}')
                         rule_passed = False
                     elif not critical and code_obj["emulatedFunctionCount"] > 0:
-                        self.verboseprint(f'...failing {code_obj["emulatedFunctionCount"]} critical flaws in {code_obj["path"]}')
+                        self.verboseprint(f'...failing: {code_obj["emulatedFunctionCount"]} critical flaws in {code_obj["path"]}')
                         rule_passed = False
         if rule_passed:
             return "Pass"
@@ -245,11 +242,11 @@ class CentrifugePolicyCheck(object):
         json_data = self.passhash_json
         if json_data.get("count") > 0:
             if not value.get("allowUserAccounts", True):
-                self.verboseprint(f'...failing allowUserAccounts - identified {json_data.get("count")} accounts')
+                self.verboseprint(f'...failing: allowUserAccounts - identified {json_data.get("count")} accounts')
                 rule_passed = False
             for hash_obj in json_data.get("results"):
                 if hash_obj.get("algorithm") in value.get("weakAlgorithms", []):
-                    self.verboseprint(f'...failing weakAlgorithms {hash_obj["algorithm"]} for user {hash_obj["username"]}')
+                    self.verboseprint(f'...failing: weakAlgorithms {hash_obj["algorithm"]} for user {hash_obj["username"]}')
                     rule_passed = False
         if rule_passed:
             return "Pass"
