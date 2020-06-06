@@ -16,37 +16,37 @@ POLICY_DETAIL_MAPPING = {
         "name": "Expired Certificates",
         "method": "checkCertificateRule",
         "status": "Fail",
-        "reaons": []
+        "reasons": []
     },
     "privateKeys": {
         "name": "Private Keys",
         "method": "checkPrivateKeyRule",
         "status": "Fail",
-        "reaons": []
+        "reasons": []
     },
     "passwordHashes": {
         "name": "Weak Password Algorithms",
         "method": "checkPasswordHashRule",
         "status": "Fail",
-        "reaons": []
+        "reasons": []
     },
     "code": {
         "name": "Code Flaws",
         "method": "checkCodeFlawsRule",
         "status": "Fail",
-        "reaons": []
+        "reasons": []
     },
     "guardian": {
         "name": "CVE Threshold",
         "method": "checkGuardianRule",
         "status": "Fail",
-        "reaons": []
+        "reasons": []
     },
     "binaryHardening": {
         "name": "Binary Hardness",
         "method": "checkBinaryHardeningRule",
         "status": "Fail",
-        "reaons": []
+        "reasons": []
     }
 }
 POLICIES = [
