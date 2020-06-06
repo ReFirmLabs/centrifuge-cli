@@ -27,6 +27,9 @@ centrifuge report --ufid=<REPORT ID> check-policy --policy-yaml my-policy.yml
 
 # Check your policy against Centrifuge report 1234 and output json format
 centrifuge --outfmt json report --ufid=<REPORT ID> check-policy --policy-yaml my-policy.yml
+
+# Check your policy against Centrifuge report 1234 and output json format with details on policy checks
+centrifuge --outfmt json report --ufid=<REPORT ID> check-policy --policy-yaml my-policy.yml --verbose
 ```
 
 
@@ -111,24 +114,39 @@ Firmware images containing any password hashes with the algorithms defined below
 ### Rule: Code Flaws
 
 Firmware images containing any high risk executables with code flaws will fail this policy check.
-Set `allowed: false` to check against all files (except those omitted in the `exceptions` modifier.
-Set `allowed: true` along with `exceptions` in order to only check a specific list of files for code flaws.
+Set `allowed: false` to check against all files (except those omitted in the `exceptions` modifier).
+Set `allowCritical: false` to check for only critical (emulated) flaws (except those omitted in the `exceptions` modifier)
 ```
   code:
     flaws:
+      # allow any potential flaws
       allowed: true
-    # the policy check will fail if any of the following files contain code flaws
+
+      # allow critical (emulated) flaws
+      allowCritical: false
+
+    # optional list of files that are omitted from this rule
     exceptions:
       - /usr/local/bin/*
       - /opt/vendor/*
 ```
 
-### Rule: CVE Threshold
+### Rule: Guardian
 
-Firmware images containing any CVEs with a CVSS rating at or above the given threshold will fail the policy check.
+Firmware images containing any CVEs with a CVSS rating at or above the given threshold or age will fail the policy check.
+Use exceptions to exclude specific files from the policy check
 ```
   guardian:
-    cvssScoreThreshold: 9.0
+    # any CVEs found at or above this threshold will cause the policy check to fail
+    cvssScoreThreshold: 7.0
+
+    # any CVEs from this year or older will cause the policy check to fail
+    # either put year (i.e., 2017) or # years (i.e., 2 would fail 2018 or earlier CVEs in 2020)
+    cveAgeThreshold: 2
+
+    # optional list of files that are omitted from this rule
+    exceptions:
+      - cpio-root/bin/busybox
 ```
 
 ### Rule: Binary Hardness

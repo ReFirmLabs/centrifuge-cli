@@ -31,14 +31,27 @@ rules:
 
   code:
     flaws:
-      allowed: false
+      # allow any potential flaws
+      allowed: true
+
+      # allow critical (emulated) flaws
+      allowCritical: false
+      
     # optional list of files that are omitted from this rule
     exceptions:
-     - /opt/vendor/*
+      - /opt/vendor/*
 
   guardian:
     # any CVEs found at or above this threshold will cause the policy check to fail
-    cvssScoreThreshold: 9.0
+    cvssScoreThreshold: 7.0
+
+    # any CVEs from this year or older will cause the policy check to fail
+    # either put year (i.e., 2017) or # years (i.e., 2 would fail 2018 or earlier CVEs in 2020)
+    cveAgeThreshold: 2
+
+    # optional list of files that are omitted from this rule
+    exceptions:
+      - cpio-root/bin/busybox
 
   binaryHardening:
     # a list of hardening features required for ELF binaries

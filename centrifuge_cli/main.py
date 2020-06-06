@@ -393,9 +393,10 @@ def binary_hardening(cli):
 
 @report.command(name='check-policy')
 @click.option('--policy-yaml', metavar='FILE', type=click.Path(), help='Centrifuge policy yaml file.', required=True)
+@click.option('--verbose', help='Details on policy evaluation.', is_flag=True)
 @click.pass_context
 @pass_cli
-def check_policy(cli, ctx, policy_yaml):
+def check_policy(cli, ctx, policy_yaml, verbose=False):
     outfmt = cli.outfmt
     cli.outfmt = 'json'
     cli.echo_enabled = False
@@ -412,7 +413,8 @@ def check_policy(cli, ctx, policy_yaml):
                                        binary_hardening_json,
                                        guardian_json,
                                        code_summary_json,
-                                       passhash_json)
+                                       passhash_json,
+                                       verbose)
 
     policy_obj.check_rules(policy_yaml)
 

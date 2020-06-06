@@ -8,6 +8,7 @@ import json
 import time
 import yaml
 import click
+import datetime
 
 CSV_HEADER = ["Policy Name", "Compliant"]
 POLICY_DETAIL_MAPPING = {
@@ -94,9 +95,8 @@ class CentrifugePolicyCheck(object):
         return exception_in_path
 
     def checkCertificateRule(self, value):
+        self.verboseprint("Checking Certificate Rule...")
         count = 0
-
-        self.verboseprint("Checking Certificate Rule..")
         json_data = self.certificates_json
         if not value.get('expired', {}).get('allowed'):
             if json_data.get("count") > 0:
@@ -122,8 +122,8 @@ class CentrifugePolicyCheck(object):
                 return "Pass"
 
     def checkPrivateKeyRule(self, value):
+        self.verboseprint("Checking Private Key Rule...")
         count = 0
-
         json_data = self.private_keys_json
         if not value.get('allowed'):
             if json_data.get("count") > 0:
@@ -159,6 +159,7 @@ class CentrifugePolicyCheck(object):
         return True
 
     def checkBinaryHardeningRule(self, value):
+        self.verboseprint("Checking Binary Hardening Rule...")
         count = 0
         json_data = self.binary_hardening_json
         if json_data.get("count") > 0:
@@ -182,45 +183,64 @@ class CentrifugePolicyCheck(object):
             return "Pass"
 
     def checkGuardianRule(self, value):
-        count = 0
+        self.verboseprint("Checking Guardian Rule...")
+        rule_passed = True
         json_data = self.guardian_json
+        cvssScoreThreshold = value.get("cvssScoreThreshold", 10.0)
+        cveAgeThreshold = value.get("cveAgeThreshold", 0)
+        if cveAgeThreshold > 0 and cveAgeThreshold < 1999:
+            current_year = int(datetime.datetime.now().year)
+            cveAgeThreshold = current_year - cveAgeThreshold
         if json_data["count"] > 0:
             for guardian_obj in json_data.get("results"):
-                if float(guardian_obj["severity"]) > value["cvssScoreThreshold"]:
-                    count += 1
-            if count > 0:
-                return "Fail"
-            else:
-                return "Pass"
-        else:
+                if value.get("exceptions", []):
+                    matched_path = list(
+                        filter(lambda regex: re.search(regex, guardian_obj["path"]), value.get("exceptions"))
+                    )
+                    if matched_path:
+                        self.verboseprint(f'...skipping exception {guardian_obj["path"]}')
+                        continue
+                if float(guardian_obj["severity"]) > cvssScoreThreshold:
+                    self.verboseprint(f'...failing cvssScoreThreshold {guardian_obj["severity"]} for {guardian_obj["component"]} at {guardian_obj["path"]}')
+                    rule_passed = False
+                cveAge = int(guardian_obj["name"][4:8])
+                if cveAge <= cveAgeThreshold:
+                    self.verboseprint(f'...failing cveAgeThreshold {guardian_obj["name"]} for {guardian_obj["component"]} at {guardian_obj["path"]}')
+                    rule_passed = False
+        if rule_passed:
             return "Pass"
+        else:
+            return "Fail"
 
     def checkCodeFlawsRule(self, value):
-        count = 0
+        self.verboseprint("Checking Code Flaws Rule...")
+        rule_passed = True
         json_data = self.code_summary_json
-        if not value.get("flaws", {}).get("allowed"):
+        allowed = value.get("flaws", {}).get("allowed")
+        critical = value.get("flaws", {}).get("allowCritical")
+        if not allowed or not critical:
             if json_data.get("count") > 0:
                 for code_obj in json_data.get("results"):
                     if value.get("exceptions", []):
                         matched_path = list(
                             filter(lambda regex: re.search(regex, code_obj["path"]), value.get("exceptions"))
                         )
-                        # Check total flaws if code path is specified in YAML file
-                        if matched_path and code_obj["totalFlaws"] > 0:
-                            count += 1
-                    else:
-                        if code_obj["totalFlaws"] > 0:
-                            count += 1
-                if count > 0:
-                    return "Fail"
-                else:
-                    return "Pass"
-            else:
-                return "Pass"
-        else:
+                        if matched_path:
+                            self.verboseprint(f'...skipping exception {code_obj["path"]}')
+                            continue
+                    if not allowed and code_obj["totalFlaws"] > 0:
+                        self.verboseprint(f'...failing {code_obj["totalFlaws"]} total flaws in {code_obj["path"]}')
+                        rule_passed = False
+                    elif not critical and code_obj["emulatedFunctionCount"] > 0:
+                        self.verboseprint(f'...failing {code_obj["emulatedFunctionCount"]} critical flaws in {code_obj["path"]}')
+                        rule_passed = False
+        if rule_passed:
             return "Pass"
+        else:
+            return "Fail"
 
     def checkPasswordHashRule(self, value):
+        self.verboseprint("Checking Password Hash Rule...")
         count = 0
         json_data = self.passhash_json
         if json_data.get("count") > 0:
