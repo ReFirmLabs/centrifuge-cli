@@ -257,22 +257,7 @@ class CentrifugePolicyCheck(object):
         Method which calls the respective rule checking function for rule name and populates the
         compliant of policy.
         """
-        if name == 'privateKeys':
-            policy_status = self.call_policy_method(name, ruledef)
-            POLICY_DETAIL_MAPPING.get(name).update({"status": policy_status})
-        elif name == 'certificates':
-            policy_status = self.call_policy_method(name, ruledef)
-            POLICY_DETAIL_MAPPING.get(name).update({"status": policy_status})
-        elif name == 'passwordHashes':
-            policy_status = self.call_policy_method(name, ruledef)
-            POLICY_DETAIL_MAPPING.get(name).update({"status": policy_status})
-        elif name == 'code':
-            policy_status = self.call_policy_method(name, ruledef)
-            POLICY_DETAIL_MAPPING.get(name).update({"status": policy_status})
-        elif name == 'guardian':
-            policy_status = self.call_policy_method(name, ruledef)
-            POLICY_DETAIL_MAPPING.get(name).update({"status": policy_status})
-        elif name == 'binaryHardening':
+        if name in POLICY_DETAIL_MAPPING:
             policy_status = self.call_policy_method(name, ruledef)
             POLICY_DETAIL_MAPPING.get(name).update({"status": policy_status})
         else:
@@ -282,7 +267,7 @@ class CentrifugePolicyCheck(object):
         output = io.StringIO()
         writer = csv.DictWriter(output, fieldnames=CSV_HEADER)
         writer.writeheader()
-        for policy, policy_detail in POLICY_DETAIL_MAPPING.items():
+        for _, policy_detail in POLICY_DETAIL_MAPPING.items():
             writer.writerow({"Policy Name": policy_detail.get("name"), "Compliant": policy_detail.get("status")})
         return output.getvalue()
 
@@ -307,7 +292,7 @@ class CentrifugePolicyCheck(object):
         with open(config_file, 'r') as stream:
             try:
                 res = yaml.safe_load(stream)
-                for i, rule in enumerate(POLICIES):
+                for _, rule in enumerate(POLICY_DETAIL_MAPPING):
                     if rule in res['rules']:
                         self.checkRule(rule, res['rules'][rule])
                     else:
