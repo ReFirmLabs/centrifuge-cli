@@ -15,32 +15,38 @@ POLICY_DETAIL_MAPPING = {
     "certificates": {
         "name": "Expired Certificates",
         "method": "checkCertificateRule",
-        "status": "Fail"
+        "status": "Fail",
+        "reaons": []
     },
     "privateKeys": {
         "name": "Private Keys",
         "method": "checkPrivateKeyRule",
-        "status": "Fail"
+        "status": "Fail",
+        "reaons": []
     },
     "passwordHashes": {
         "name": "Weak Password Algorithms",
         "method": "checkPasswordHashRule",
-        "status": "Fail"
+        "status": "Fail",
+        "reaons": []
     },
     "code": {
         "name": "Code Flaws",
         "method": "checkCodeFlawsRule",
-        "status": "Fail"
+        "status": "Fail",
+        "reaons": []
     },
     "guardian": {
         "name": "CVE Threshold",
         "method": "checkGuardianRule",
-        "status": "Fail"
+        "status": "Fail",
+        "reaons": []
     },
     "binaryHardening": {
         "name": "Binary Hardness",
         "method": "checkBinaryHardeningRule",
-        "status": "Fail"
+        "status": "Fail",
+        "reaons": []
     }
 }
 POLICIES = [
@@ -51,7 +57,6 @@ POLICIES = [
     'guardian',
     'binaryHardening'
 ]
-
 
 class CentrifugePolicyCheck(object):
     """
@@ -64,13 +69,15 @@ class CentrifugePolicyCheck(object):
                  guardian_json,
                  code_summary_json,
                  passhash_json,
-                 verbose=False):
+                 explain,
+                 verbose):
         self.certificates_json = certificates_json
         self.private_keys_json = private_keys_json
         self.binary_hardening_json = binary_hardening_json
         self.guardian_json = guardian_json
         self.code_summary_json = code_summary_json
         self.passhash_json = passhash_json
+        self.explain = explain
         self.verbose = verbose
 
     def verboseprint(self, *args):
@@ -96,6 +103,7 @@ class CentrifugePolicyCheck(object):
     def checkCertificateRule(self, value):
         self.verboseprint("Checking Certificate Rule...")
         rule_passed = True
+        reasons = []
         json_data = self.certificates_json
         if not value.get('expired', {}).get('allowed'):
             if json_data.get("count") > 0:
@@ -113,15 +121,15 @@ class CentrifugePolicyCheck(object):
                         if int(time.time()) > cert_expiry_timestamp:
                             rule_passed = False
                             for path in cert["paths"]:
-                                self.verboseprint(f'...failing: certificate expired at {path}')
-        if rule_passed:
-            return "Pass"
-        else:
-            return "Fail"
+                                reason = f'certificate expired at {path}'
+                                reasons.append(reason)
+                                self.verboseprint(f'...failing: {reason}')
+        return rule_passed, reasons
 
     def checkPrivateKeyRule(self, value):
         self.verboseprint("Checking Private Key Rule...")
         rule_passed = True
+        reasons = []
         json_data = self.private_keys_json
         if not value.get('allowed'):
             if json_data.get("count") > 0:
@@ -136,11 +144,10 @@ class CentrifugePolicyCheck(object):
                     if pk["paths"]:
                         rule_passed = False
                         for path in pk["paths"]:
-                            self.verboseprint(f'...failing: private key found at {path}')
-        if rule_passed:
-            return "Pass"
-        else:
-            return "Fail"
+                            reason = f'private key found at {path}'
+                            reasons.append(reason)
+                            self.verboseprint(f'...failing: {reason}')
+        return rule_passed, reasons       
 
     def check_files_for_binary_hardening(self, obj, value):
         boolean_feature = ("nx", "canary", "pie", "stripped")
@@ -158,6 +165,7 @@ class CentrifugePolicyCheck(object):
     def checkBinaryHardeningRule(self, value):
         self.verboseprint("Checking Binary Hardening Rule...")
         rule_passed = True
+        reasons = []
         includes = value.get("include", [])
         json_data = self.binary_hardening_json
         if json_data.get("count") > 0:
@@ -167,16 +175,16 @@ class CentrifugePolicyCheck(object):
                     if not path_included:
                         continue
                 if not self.check_files_for_binary_hardening(obj, value):
-                    self.verboseprint(f'...failing: invalid binary hardening settings at {obj["paths"][0]}')
+                    reason = f'invalid binary hardening settings at {obj["paths"][0]}'
+                    reasons.append(reason)
+                    self.verboseprint(f'...failing: {reason}')
                     rule_passed = False
-        if rule_passed:
-            return "Pass"
-        else:
-            return "Fail"
+        return rule_passed, reasons
 
     def checkGuardianRule(self, value):
         self.verboseprint("Checking Guardian Rule...")
         rule_passed = True
+        reasons = []
         json_data = self.guardian_json
         cvssScoreThreshold = value.get("cvssScoreThreshold", 10.0)
         cveAgeThreshold = value.get("cveAgeThreshold", 0)
@@ -193,20 +201,22 @@ class CentrifugePolicyCheck(object):
                         self.verboseprint(f'...skipping exception {guardian_obj["path"]}')
                         continue
                 if float(guardian_obj["severity"]) > cvssScoreThreshold:
-                    self.verboseprint(f'...failing: cvssScoreThreshold {guardian_obj["severity"]} for {guardian_obj["component"]} at {guardian_obj["path"]}')
+                    reason = f'cvssScoreThreshold {guardian_obj["severity"]} for {guardian_obj["component"]} at {guardian_obj["path"]}'
+                    reasons.append(reason)
+                    self.verboseprint(f'...failing: {reason}')
                     rule_passed = False
                 cveAge = int(guardian_obj["name"][4:8])
                 if cveAge <= cveAgeThreshold:
-                    self.verboseprint(f'...failing: cveAgeThreshold {guardian_obj["name"]} for {guardian_obj["component"]} at {guardian_obj["path"]}')
+                    reason = f'cveAgeThreshold {guardian_obj["name"]} for {guardian_obj["component"]} at {guardian_obj["path"]}'
+                    reasons.append(reason)
+                    self.verboseprint(f'...failing: {reason}')
                     rule_passed = False
-        if rule_passed:
-            return "Pass"
-        else:
-            return "Fail"
+        return rule_passed, reasons
 
     def checkCodeFlawsRule(self, value):
         self.verboseprint("Checking Code Flaws Rule...")
         rule_passed = True
+        reasons = []
         json_data = self.code_summary_json
         allowed = value.get("flaws", {}).get("allowed")
         critical = value.get("flaws", {}).get("allowCritical")
@@ -221,32 +231,35 @@ class CentrifugePolicyCheck(object):
                             self.verboseprint(f'...skipping exception {code_obj["path"]}')
                             continue
                     if not allowed and code_obj["totalFlaws"] > 0:
-                        self.verboseprint(f'...failing: {code_obj["totalFlaws"]} total flaws in {code_obj["path"]}')
+                        reason = f'{code_obj["totalFlaws"]} total flaws in {code_obj["path"]}'
+                        reasons.append(reason)
+                        self.verboseprint(f'...failing: {reason}')
                         rule_passed = False
                     elif not critical and code_obj["emulatedFunctionCount"] > 0:
-                        self.verboseprint(f'...failing: {code_obj["emulatedFunctionCount"]} critical flaws in {code_obj["path"]}')
+                        reason = f'{code_obj["emulatedFunctionCount"]} critical flaws in {code_obj["path"]}'
+                        reasons.append(reason)
+                        self.verboseprint(f'...failing: {reason}')
                         rule_passed = False
-        if rule_passed:
-            return "Pass"
-        else:
-            return "Fail"
+        return rule_passed, reasons
 
     def checkPasswordHashRule(self, value):
         self.verboseprint("Checking Password Hash Rule...")
         rule_passed = True
+        reasons = []
         json_data = self.passhash_json
         if json_data.get("count") > 0:
             if not value.get("allowUserAccounts", True):
-                self.verboseprint(f'...failing: allowUserAccounts - identified {json_data.get("count")} accounts')
+                reason = f'allowUserAccounts - identified {json_data.get("count")} accounts'
+                reasons.append(reason)
+                self.verboseprint(f'...failing: {reason}')
                 rule_passed = False
             for hash_obj in json_data.get("results"):
                 if hash_obj.get("algorithm") in value.get("weakAlgorithms", []):
-                    self.verboseprint(f'...failing: weakAlgorithms {hash_obj["algorithm"]} for user {hash_obj["username"]}')
+                    reason = f'weakAlgorithm {hash_obj["algorithm"]} for user {hash_obj["username"]}'
+                    reasons.append(reason)
+                    self.verboseprint(f'...failing: {reason}')
                     rule_passed = False
-        if rule_passed:
-            return "Pass"
-        else:
-            return "Fail"
+        return rule_passed, reasons
 
     def call_policy_method(self, policy_name, ruledef):
         policy_method = getattr(self, POLICY_DETAIL_MAPPING.get(policy_name).get("method"))
@@ -258,17 +271,25 @@ class CentrifugePolicyCheck(object):
         compliant of policy.
         """
         if name in POLICY_DETAIL_MAPPING:
-            policy_status = self.call_policy_method(name, ruledef)
+            rule_passed, reasons = self.call_policy_method(name, ruledef)
+            policy_status = "Pass" if rule_passed else "Fail"
             POLICY_DETAIL_MAPPING.get(name).update({"status": policy_status})
+            POLICY_DETAIL_MAPPING.get(name).update({"reasons": reasons})
         else:
             raise RuntimeError(f'Invalid Rule name {name}')
 
     def generate_csv(self):
         output = io.StringIO()
-        writer = csv.DictWriter(output, fieldnames=CSV_HEADER)
+        field_names = CSV_HEADER
+        if self.explain:
+            field_names.append("Reasons")
+        writer = csv.DictWriter(output, fieldnames=field_names)
         writer.writeheader()
         for _, policy_detail in POLICY_DETAIL_MAPPING.items():
-            writer.writerow({"Policy Name": policy_detail.get("name"), "Compliant": policy_detail.get("status")})
+            row_data = {"Policy Name": policy_detail.get("name"), "Compliant": policy_detail.get("status")}
+            if self.explain:
+                row_data.update({"Reasons": policy_detail.get("reasons")})
+            writer.writerow(row_data)
         return output.getvalue()
 
     def generate_json(self):
@@ -279,13 +300,14 @@ class CentrifugePolicyCheck(object):
         for policy, policy_detail in POLICY_DETAIL_MAPPING.items():
             if policy_detail.get("status") != "Pass":
                 final_result_dict["finalResult"] = "Fail"
-            final_result_dict.get("results").append(
-                {
-                    "rule": policy,
-                    "name": policy_detail.get("name"),
-                    "compliant": policy_detail.get("status")
-                }
-            )
+            final_result = {
+                "rule": policy,
+                "name": policy_detail.get("name"),
+                "compliant": policy_detail.get("status")
+            }
+            if self.explain:
+                final_result.update({"reasons": policy_detail.get("reasons")})
+            final_result_dict.get("results").append(final_result)
         return json.dumps(final_result_dict, indent=2, sort_keys=True)
 
     def check_rules(self, config_file):

@@ -7,6 +7,7 @@ This command line tool takes a policy file that defines the policy rules that yo
 ## Prerequisites
 
 Before you begin, ensure you have met the following requirements:
+
 * You have python 3 installed (tested with python 3.7)
 * You have an active Centrifuge account with a valid API authtoken
 * You have a completed Centrifuge report that you wish to check
@@ -27,11 +28,11 @@ centrifuge report --ufid=<REPORT ID> check-policy --policy-yaml my-policy.yml
 
 # Check your policy against Centrifuge report 1234 and output json format
 centrifuge --outfmt json report --ufid=<REPORT ID> check-policy --policy-yaml my-policy.yml
-
-# Check your policy against Centrifuge report 1234 and output json format with details on policy checks
-centrifuge --outfmt json report --ufid=<REPORT ID> check-policy --policy-yaml my-policy.yml --verbose
 ```
 
+Other command options:
+```--verbose``` : outputs details on compliance check logic
+```--explain``` : adds "reasons" column to all reports which explains why policy failed / what needs to be fixed
 
 ## Policy Rule Definition
 
@@ -49,7 +50,7 @@ Current policy schema version: `1.0`
 
 Refer to example rule definition files included in this repository for more examples.
 
-#### Rule exceptions
+### Rule exceptions
 
 You may only want to apply a rule to a certain set of files rather than all the files in the firmware image, or apply the rule to all files except a certain set of files you wish to ignore. Many (if not all) of the rules can be defined in this way for maximum flexibility.
 
