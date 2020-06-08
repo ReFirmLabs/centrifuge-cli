@@ -59,6 +59,7 @@ POLICIES = [
     'binaryHardening'
 ]
 
+
 class CentrifugePolicyCheck(object):
     """
     A class to process POLICIES specified in YAML file.
@@ -150,7 +151,7 @@ class CentrifugePolicyCheck(object):
                             reason = f'private key found at {path}'
                             reasons.append(reason)
                             self.verboseprint(f'...failing: {reason}')
-        return rule_passed, reasons       
+        return rule_passed, reasons
 
     def check_files_for_binary_hardening(self, obj, value):
         boolean_feature = ("nx", "canary", "pie", "stripped")
@@ -323,7 +324,7 @@ class CentrifugePolicyCheck(object):
     def generate_json(self):
         json_results = self.build_json()
         return json.dumps(json_results, indent=2, sort_keys=True)
-    
+
     def generate_report(self, report_template):
         json_results = self.build_json()
         with open(report_template, 'r') as f:
