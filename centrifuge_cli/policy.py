@@ -9,6 +9,7 @@ import time
 import yaml
 import click
 import datetime
+import chevron
 
 CSV_HEADER = ["Policy Name", "Compliant"]
 POLICY_DETAIL_MAPPING = {
@@ -69,6 +70,7 @@ class CentrifugePolicyCheck(object):
                  guardian_json,
                  code_summary_json,
                  passhash_json,
+                 info_json,
                  explain,
                  verbose):
         self.certificates_json = certificates_json
@@ -77,6 +79,7 @@ class CentrifugePolicyCheck(object):
         self.guardian_json = guardian_json
         self.code_summary_json = code_summary_json
         self.passhash_json = passhash_json
+        self.info_json = info_json
         self.explain = explain
         self.verbose = verbose
 
@@ -292,11 +295,18 @@ class CentrifugePolicyCheck(object):
             writer.writerow(row_data)
         return output.getvalue()
 
-    def generate_json(self):
+    def build_json(self):
         final_result_dict = {
             "finalResult": "Pass",
             "results": []
         }
+        final_result_dict.update({
+            "info": {
+                "vendor": self.info_json["vendor"],
+                "device": self.info_json["device"],
+                "version": self.info_json["version"]
+            }
+        })
         for policy, policy_detail in POLICY_DETAIL_MAPPING.items():
             if policy_detail.get("status") != "Pass":
                 final_result_dict["finalResult"] = "Fail"
@@ -308,7 +318,16 @@ class CentrifugePolicyCheck(object):
             if self.explain:
                 final_result.update({"reasons": policy_detail.get("reasons")})
             final_result_dict.get("results").append(final_result)
-        return json.dumps(final_result_dict, indent=2, sort_keys=True)
+        return final_result_dict
+
+    def generate_json(self):
+        json_results = self.build_json()
+        return json.dumps(json_results, indent=2, sort_keys=True)
+    
+    def generate_report(self, report_template):
+        json_results = self.build_json()
+        with open(report_template, 'r') as f:
+            return chevron.render(f, json_results)
 
     def check_rules(self, config_file):
         with open(config_file, 'r') as stream:

@@ -393,11 +393,12 @@ def binary_hardening(cli):
 
 @report.command(name='check-policy')
 @click.option('--policy-yaml', metavar='FILE', type=click.Path(), help='Centrifuge policy yaml file.', required=True)
+@click.option('--report-template', metavar='FILE', type=click.Path(), help='Policy report template file.', required=False)
 @click.option('--explain', help='Add reasons for failure to results', is_flag=True)
 @click.option('--verbose', help='Details on policy evaluation.', is_flag=True)
 @click.pass_context
 @pass_cli
-def check_policy(cli, ctx, policy_yaml, explain=False, verbose=False):
+def check_policy(cli, ctx, policy_yaml, report_template, explain=False, verbose=False):
     outfmt = cli.outfmt
     cli.outfmt = 'json'
     cli.echo_enabled = False
@@ -408,6 +409,7 @@ def check_policy(cli, ctx, policy_yaml, explain=False, verbose=False):
     guardian_json = json.loads(ctx.invoke(guardian))
     code_summary_json = json.loads(ctx.invoke(code_summary))
     passhash_json = json.loads(ctx.invoke(passhash))
+    info_json = json.loads(ctx.invoke(info))
 
     policy_obj = CentrifugePolicyCheck(certificates_json,
                                        private_keys_json,
@@ -415,12 +417,15 @@ def check_policy(cli, ctx, policy_yaml, explain=False, verbose=False):
                                        guardian_json,
                                        code_summary_json,
                                        passhash_json,
+                                       info_json,
                                        explain,
                                        verbose)
 
     policy_obj.check_rules(policy_yaml)
 
-    if outfmt == 'json':
+    if report_template:
+        result = policy_obj.generate_report(report_template)
+    elif outfmt == 'json':
         result = policy_obj.generate_json()
     else:
         result = policy_obj.generate_csv()

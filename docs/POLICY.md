@@ -23,15 +23,20 @@ pip3 install centrifuge-cli
 ## Using centrifuge-policy-check.py
 
 ```
+# Command options:
+--policy-yaml : location of policy rules file (see below)
+--explain : adds "reasons" column to all reports which explains why policy failed / what needs to be fixed
+--verbose : outputs details on compliance check logic
+--report-template : location of mustache-based template for compliance report
+
 # Check your policy against Centrifuge report 1234 and output CSV format (default)
 centrifuge report --ufid=<REPORT ID> check-policy --policy-yaml my-policy.yml
 
 # Check your policy against Centrifuge report 1234 and output json format
 centrifuge --outfmt json report --ufid=<REPORT ID> check-policy --policy-yaml my-policy.yml
 
-# Other command options:
---explain : adds "reasons" column to all reports which explains why policy failed / what needs to be fixed
---verbose : outputs details on compliance check logic
+# Check your policy against Centrifuge report 1234 and output full html compliance report using example template
+centrifuge report --ufid=<REPORT ID> check-policy --policy-yaml my-policy.yml --explain --report-template example-policy-report.mustache > compliance_report.htm
 ```
 
 ## Policy Rule Definition
