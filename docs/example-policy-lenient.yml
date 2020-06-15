@@ -4,6 +4,7 @@ rules:
     expired:
       allowed: true
   passwordHashes:
+    allowUserAccounts: true
     weakAlgorithms: [des, md5]
   privateKeys:
     allowed: true

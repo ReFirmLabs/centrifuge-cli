@@ -393,9 +393,10 @@ def binary_hardening(cli):
 
 @report.command(name='check-policy')
 @click.option('--policy-yaml', metavar='FILE', type=click.Path(), help='Centrifuge policy yaml file.', required=True)
+@click.option('--report-template', metavar='FILE', type=click.Path(), help='Policy report template file.', required=False)
 @click.pass_context
 @pass_cli
-def check_policy(cli, ctx, policy_yaml):
+def check_policy(cli, ctx, policy_yaml, report_template):
     outfmt = cli.outfmt
     cli.outfmt = 'json'
     cli.echo_enabled = False
@@ -406,19 +407,24 @@ def check_policy(cli, ctx, policy_yaml):
     guardian_json = json.loads(ctx.invoke(guardian))
     code_summary_json = json.loads(ctx.invoke(code_summary))
     passhash_json = json.loads(ctx.invoke(passhash))
+    info_json = json.loads(ctx.invoke(info))
 
     policy_obj = CentrifugePolicyCheck(certificates_json,
                                        private_keys_json,
                                        binary_hardening_json,
                                        guardian_json,
                                        code_summary_json,
-                                       passhash_json)
+                                       passhash_json,
+                                       info_json)
 
     policy_obj.check_rules(policy_yaml)
 
-    result = policy_obj.generate_csv()
-    if outfmt == 'json':
+    if report_template:
+        result = policy_obj.generate_report(report_template)
+    elif outfmt == 'json':
         result = policy_obj.generate_json()
+    else:
+        result = policy_obj.generate_csv()
 
     cli.echo_enabled = True
     cli.outfmt = outfmt

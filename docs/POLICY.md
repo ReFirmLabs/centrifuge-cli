@@ -7,6 +7,7 @@ This command line tool takes a policy file that defines the policy rules that yo
 ## Prerequisites
 
 Before you begin, ensure you have met the following requirements:
+
 * You have python 3 installed (tested with python 3.7)
 * You have an active Centrifuge account with a valid API authtoken
 * You have a completed Centrifuge report that you wish to check
@@ -22,13 +23,19 @@ pip3 install centrifuge-cli
 ## Using centrifuge-policy-check.py
 
 ```
+# Command options:
+--policy-yaml : location of policy rules file (see below)
+--report-template : location of mustache-based template for compliance report
+
 # Check your policy against Centrifuge report 1234 and output CSV format (default)
 centrifuge report --ufid=<REPORT ID> check-policy --policy-yaml my-policy.yml
 
 # Check your policy against Centrifuge report 1234 and output json format
 centrifuge --outfmt json report --ufid=<REPORT ID> check-policy --policy-yaml my-policy.yml
-```
 
+# Check your policy against Centrifuge report 1234 and output full html compliance report using example template
+centrifuge report --ufid=<REPORT ID> check-policy --policy-yaml my-policy.yml --report-template example-policy-report.mustache > compliance_report.htm
+```
 
 ## Policy Rule Definition
 
@@ -46,7 +53,7 @@ Current policy schema version: `1.0`
 
 Refer to example rule definition files included in this repository for more examples.
 
-#### Rule exceptions
+### Rule exceptions
 
 You may only want to apply a rule to a certain set of files rather than all the files in the firmware image, or apply the rule to all files except a certain set of files you wish to ignore. Many (if not all) of the rules can be defined in this way for maximum flexibility.
 
@@ -101,8 +108,13 @@ Firmware images containing any private keys will fail this policy check.
 ### Rule: Weak Password Hashes
 
 Firmware images containing any password hashes with the algorithms defined below will fail.
+Set `allowUserAccounts: false` to fail if any user accounts are present, regardless of hash algorithm.
 ```
   passwordHashes:
+    # whether defined user accounts are allowed or not
+    allowUserAccounts: true
+
+    # any hashes with the following algorithms will fail the policy check
     weakAlgorithms:
       - des
       - md5
@@ -111,24 +123,39 @@ Firmware images containing any password hashes with the algorithms defined below
 ### Rule: Code Flaws
 
 Firmware images containing any high risk executables with code flaws will fail this policy check.
-Set `allowed: false` to check against all files (except those omitted in the `exceptions` modifier.
-Set `allowed: true` along with `exceptions` in order to only check a specific list of files for code flaws.
+Set `allowed: false` to check against all files (except those omitted in the `exceptions` modifier).
+Set `allowCritical: false` to check for only critical (emulated) flaws (except those omitted in the `exceptions` modifier)
 ```
   code:
     flaws:
+      # allow any potential flaws
       allowed: true
-    # the policy check will fail if any of the following files contain code flaws
+
+      # allow critical (emulated) flaws
+      allowCritical: false
+
+    # optional list of files that are omitted from this rule
     exceptions:
       - /usr/local/bin/*
       - /opt/vendor/*
 ```
 
-### Rule: CVE Threshold
+### Rule: Guardian
 
-Firmware images containing any CVEs with a CVSS rating at or above the given threshold will fail the policy check.
+Firmware images containing any CVEs with a CVSS rating at or above the given threshold or age will fail the policy check.
+Use exceptions to exclude specific files from the policy check
 ```
   guardian:
-    cvssScoreThreshold: 9.0
+    # any CVEs found at or above this threshold will cause the policy check to fail
+    cvssScoreThreshold: 7.0
+
+    # any CVEs from this year or older will cause the policy check to fail
+    # either put year (i.e., 2017) or # years (i.e., 2 would fail 2018 or earlier CVEs in 2020)
+    cveAgeThreshold: 2
+
+    # optional list of files that are omitted from this rule
+    exceptions:
+      - cpio-root/bin/busybox
 ```
 
 ### Rule: Binary Hardness
