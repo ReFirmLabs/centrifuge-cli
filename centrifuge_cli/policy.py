@@ -71,9 +71,7 @@ class CentrifugePolicyCheck(object):
                  guardian_json,
                  code_summary_json,
                  passhash_json,
-                 info_json,
-                 explain,
-                 verbose):
+                 info_json):
         self.certificates_json = certificates_json
         self.private_keys_json = private_keys_json
         self.binary_hardening_json = binary_hardening_json
@@ -81,8 +79,7 @@ class CentrifugePolicyCheck(object):
         self.code_summary_json = code_summary_json
         self.passhash_json = passhash_json
         self.info_json = info_json
-        self.explain = explain
-        self.verbose = verbose
+        self.verbose = False    # set to True to generate debug logging
 
     def verboseprint(self, *args):
         """
@@ -285,14 +282,12 @@ class CentrifugePolicyCheck(object):
     def generate_csv(self):
         output = io.StringIO()
         field_names = CSV_HEADER
-        if self.explain:
-            field_names.append("Reasons")
+        field_names.append("Reasons")
         writer = csv.DictWriter(output, fieldnames=field_names)
         writer.writeheader()
         for _, policy_detail in POLICY_DETAIL_MAPPING.items():
             row_data = {"Policy Name": policy_detail.get("name"), "Compliant": policy_detail.get("status")}
-            if self.explain:
-                row_data.update({"Reasons": policy_detail.get("reasons")})
+            row_data.update({"Reasons": policy_detail.get("reasons")})
             writer.writerow(row_data)
         return output.getvalue()
 
@@ -316,8 +311,7 @@ class CentrifugePolicyCheck(object):
                 "name": policy_detail.get("name"),
                 "compliant": policy_detail.get("status")
             }
-            if self.explain:
-                final_result.update({"reasons": policy_detail.get("reasons")})
+            final_result.update({"reasons": policy_detail.get("reasons")})
             final_result_dict.get("results").append(final_result)
         return final_result_dict
 
