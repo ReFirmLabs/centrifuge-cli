@@ -106,9 +106,9 @@ class CentrifugePolicyCheck(object):
             json_data = self.checklist_json
             passing = json_data['summary']['passing']
             total = json_data['summary']['total']
-            if (total-passing) > 0:
+            if (total - passing) > 0:
                 return "Fail"
-    
+
         return "Pass"
 
     def checkCertificateRule(self, value):

@@ -392,6 +392,7 @@ def binary_hardening(cli):
     cli.echo(result)
     return(result)
 
+
 @report.command(name='security-checklist')
 @pass_cli
 def security_checklist(cli):
