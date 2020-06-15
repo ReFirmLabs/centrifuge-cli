@@ -117,6 +117,8 @@ class Cli(object):
         results = data
         if 'results' in results:
             results = results['results']
+        elif 'items' in results:
+            results = results['items']
         elif not isinstance(results, list):
             results = [results, ]
         flattened = []
@@ -390,6 +392,13 @@ def binary_hardening(cli):
     cli.echo(result)
     return(result)
 
+@report.command(name='security-checklist')
+@pass_cli
+def security_checklist(cli):
+    result = cli.do_GET(f'/api/report/SecurityChecklist/{cli.ufid}', paginated=False)
+    cli.echo(result)
+    return(result)
+
 
 @report.command(name='check-policy')
 @click.option('--policy-yaml', metavar='FILE', type=click.Path(), help='Centrifuge policy yaml file.', required=True)
@@ -406,13 +415,15 @@ def check_policy(cli, ctx, policy_yaml):
     guardian_json = json.loads(ctx.invoke(guardian))
     code_summary_json = json.loads(ctx.invoke(code_summary))
     passhash_json = json.loads(ctx.invoke(passhash))
+    checklist_json = json.loads(ctx.invoke(security_checklist))
 
     policy_obj = CentrifugePolicyCheck(certificates_json,
                                        private_keys_json,
                                        binary_hardening_json,
                                        guardian_json,
                                        code_summary_json,
-                                       passhash_json)
+                                       passhash_json,
+                                       checklist_json)
 
     policy_obj.check_rules(policy_yaml)
 

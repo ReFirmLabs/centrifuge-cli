@@ -1,5 +1,5 @@
 # version of the policy specification
-policyVersion: 1.0
+policyVersion: 1.1
 
 # Define the policy rules to pass or fail a finished Centrifuge report.
 
@@ -52,3 +52,7 @@ rules:
     include:
       - /opt/vendor/*
       - /root/*
+  
+  securityChecklist:
+    # any security checklist results should result in failure in most policies
+    allowed: false

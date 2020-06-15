@@ -40,6 +40,11 @@ POLICY_DETAIL_MAPPING = {
         "name": "Binary Hardness",
         "method": "checkBinaryHardeningRule",
         "status": "Fail"
+    },
+    "securityChecklist": {
+        "name": "Security Checklist",
+        "method": "checkSecurityChecklistRule",
+        "status": "Fail"
     }
 }
 POLICIES = [
@@ -48,7 +53,8 @@ POLICIES = [
     'passwordHashes',
     'code',
     'guardian',
-    'binaryHardening'
+    'binaryHardening',
+    'securityChecklist'
 ]
 
 
@@ -63,6 +69,7 @@ class CentrifugePolicyCheck(object):
                  guardian_json,
                  code_summary_json,
                  passhash_json,
+                 checklist_json,
                  verbose=False):
         self.certificates_json = certificates_json
         self.private_keys_json = private_keys_json
@@ -70,6 +77,7 @@ class CentrifugePolicyCheck(object):
         self.guardian_json = guardian_json
         self.code_summary_json = code_summary_json
         self.passhash_json = passhash_json
+        self.checklist_json = checklist_json
         self.verbose = verbose
 
     def verboseprint(self, *args):
@@ -92,6 +100,16 @@ class CentrifugePolicyCheck(object):
                                list(map(lambda path: path, path_list)))
                     )
         return exception_in_path
+
+    def checkSecurityChecklistRule(self, value):
+        if not value.get('allowed'):
+            json_data = self.checklist_json
+            passing = json_data['summary']['passing']
+            total = json_data['summary']['total']
+            if (total-passing) > 0:
+                return "Fail"
+    
+        return "Pass"
 
     def checkCertificateRule(self, value):
         count = 0
@@ -259,6 +277,9 @@ class CentrifugePolicyCheck(object):
             policy_status = self.call_policy_method(name, ruledef)
             POLICY_DETAIL_MAPPING.get(name).update({"status": policy_status})
         elif name == 'binaryHardening':
+            policy_status = self.call_policy_method(name, ruledef)
+            POLICY_DETAIL_MAPPING.get(name).update({"status": policy_status})
+        elif name == 'securityChecklist':
             policy_status = self.call_policy_method(name, ruledef)
             POLICY_DETAIL_MAPPING.get(name).update({"status": policy_status})
         else:
