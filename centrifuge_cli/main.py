@@ -117,8 +117,6 @@ class Cli(object):
         results = data
         if 'results' in results:
             results = results['results']
-        elif 'items' in results:
-            results = results['items']
         elif not isinstance(results, list):
             results = [results, ]
         flattened = []
