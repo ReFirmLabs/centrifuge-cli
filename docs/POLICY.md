@@ -20,7 +20,7 @@ Tested on Linux with python 3.7
 pip3 install centrifuge-cli
 ```
 
-## Using centrifuge-policy-check.py
+## Using Centrifuge Policy Check
 
 ```
 # Command options:
@@ -49,7 +49,7 @@ policyVersion: 1.0
 rules: {}
 ```
 
-Current policy schema version: `1.0`
+Current policy schema version: `1.1`
 
 Refer to example rule definition files included in this repository for more examples.
 
@@ -174,4 +174,14 @@ In order to limit this check to a certain list of files, use the `include` modif
     include:
       - /opt/vendor/*
       - /root/*
-      
+```
+
+### Rule: Security Checklist
+
+Firmware images can contain pre existing known threats such as backdoors, malware or known exploits. Security
+checklist looks for these direct indicators of compromise. We recommend all policies not allow for any Security
+Checklist results.
+```
+  securityChecklist:
+    allowed: false
+```
