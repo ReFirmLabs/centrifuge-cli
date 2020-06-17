@@ -48,6 +48,12 @@ POLICY_DETAIL_MAPPING = {
         "method": "checkBinaryHardeningRule",
         "status": "Fail",
         "reasons": []
+    },
+    "securityChecklist": {
+        "name": "Security Checklist",
+        "method": "checkSecurityChecklistRule",
+        "status": "Fail",
+        "reasons": []
     }
 }
 POLICIES = [
@@ -56,7 +62,8 @@ POLICIES = [
     'passwordHashes',
     'code',
     'guardian',
-    'binaryHardening'
+    'binaryHardening',
+    'securityChecklist'
 ]
 
 
@@ -71,15 +78,18 @@ class CentrifugePolicyCheck(object):
                  guardian_json,
                  code_summary_json,
                  passhash_json,
-                 info_json):
+                 checklist_json,
+                 info_json,
+                 verbose=False):
         self.certificates_json = certificates_json
         self.private_keys_json = private_keys_json
         self.binary_hardening_json = binary_hardening_json
         self.guardian_json = guardian_json
         self.code_summary_json = code_summary_json
         self.passhash_json = passhash_json
+        self.checklist_json = checklist_json
         self.info_json = info_json
-        self.verbose = False    # set to True to generate debug logging
+        self.verbose = verbose
 
     def verboseprint(self, *args):
         """
@@ -100,6 +110,21 @@ class CentrifugePolicyCheck(object):
                         filter(lambda path: re.search(regex, path), path_list))
                     exceptions_in_path = exceptions_in_path + exceptions
         return exceptions_in_path
+
+    def checkSecurityChecklistRule(self, value):
+        if not value.get('allowed'):
+            json_data = self.checklist_json
+            passing = json_data['summary']['passing']
+            total = json_data['summary']['total']
+            if (total - passing) > 0:
+                reasons = []
+                for result in json_data['results']:
+                    if result['statusCode'] == 1:
+                        name = result['Analyzer']['name']
+                        reasons.append(f'{name} was found during Security Checklist scan')
+                return False, reasons
+
+        return True, []
 
     def checkCertificateRule(self, value):
         self.verboseprint("Checking Certificate Rule...")

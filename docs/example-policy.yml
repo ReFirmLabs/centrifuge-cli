@@ -69,3 +69,7 @@ rules:
       - /lib/modules/*
       - /opt/vendor/*
       - /root/*
+  
+  securityChecklist:
+    # any security checklist results should result in failure in most policies
+    allowed: false

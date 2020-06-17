@@ -1,4 +1,4 @@
-policyVersion: 1.0
+policyVersion: 1.1
 rules:
   certificates:
     expired:
@@ -13,3 +13,5 @@ rules:
       allowed: true
   guardian:
     cvssScoreThreshold: 9.0
+  securityChecklist:
+    allowed: true

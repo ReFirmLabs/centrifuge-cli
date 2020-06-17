@@ -151,6 +151,12 @@ Get SBOM Results:
 
     $ centrifuge report --ufid=<REPORT_ID> sbom
 
+Get Security Checklist Results:
+
+.. code-block:: bash
+
+    $ centrifuge report --ufid=<REPORT_ID> security-checklist
+
 The code analysis section is a little bit more complicated, since the data is
 more structured. To understand how to access this data you need to understand
 that when we process a firmware we must extract it first, each time we extract a
