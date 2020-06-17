@@ -1,0 +1,25 @@
+<style>
+  #Pass {
+    color:green;
+  }
+  #Fail {
+    color:red;
+  }
+</style>
+<h1>Centrifuge Policy Report</h1>
+<b>Vendor: </b>{{info.vendor}}<br/>
+<b>Device: </b>{{info.device}}<br/>
+<b>Version: </b>{{info.version}}<br/>
+
+<h2>Overall: <span id="{{finalResult}}">{{finalResult}}</span></h2>
+
+<ul>{{#results}}
+<li><h3>{{name}} : <span id="{{compliant}}">{{compliant}}</span></h3>
+  <ul>
+    {{#reasons}}
+      <li>{{.}}</li>
+    {{/reasons}}
+    <br/>
+  </ul>
+</li>
+{{/results}}</ul>
