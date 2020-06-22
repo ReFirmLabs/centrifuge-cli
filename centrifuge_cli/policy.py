@@ -10,6 +10,7 @@ import yaml
 import click
 import datetime
 import chevron
+from dateutil.relativedelta import relativedelta
 
 CSV_HEADER = ["Policy Name", "Compliant"]
 POLICY_DETAIL_MAPPING = {
@@ -133,6 +134,9 @@ class CentrifugePolicyCheck(object):
         json_data = self.certificates_json
         if not value.get('expired', {}).get('allowed'):
             if json_data.get("count") > 0:
+                expired_check_time = int(time.time())
+                expiring_within_threshold = value.get('expired', {}).get('expiring_within', 0)
+                expired_in_future_time = int((datetime.datetime.now() + relativedelta(months=expiring_within_threshold)).timestamp())
                 # Remove exceptions from results if any
                 for cert in json_data.get("results"):
                     exceptions = value.get("exceptions", [])
@@ -144,10 +148,13 @@ class CentrifugePolicyCheck(object):
                     if cert["paths"]:
                         # Check if certificate is expired.
                         cert_expiry_timestamp = int(cert["validityEnd"][:-3])
-                        if int(time.time()) > cert_expiry_timestamp:
+                        if expired_in_future_time > cert_expiry_timestamp:
                             rule_passed = False
                             for path in cert["paths"]:
-                                reason = f'certificate expired at {path}'
+                                if expired_check_time > cert_expiry_timestamp:
+                                    reason = f'certificate expired at {path}'
+                                else:
+                                    reason = f'certificate will expire within {expiring_within_threshold} months at {path}'
                                 reasons.append(reason)
                                 self.verboseprint(f'...failing: {reason}')
         return rule_passed, reasons

@@ -12,6 +12,10 @@ rules:
   certificates:
     expired:
       allowed: false
+
+      # also check for certificates expiring in upcoming x months
+      expiring_within: 6
+
     # optional list of files that are omitted from this rule
     exceptions: 
       - /etc/ssl/*
