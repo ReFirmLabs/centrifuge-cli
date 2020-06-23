@@ -13,8 +13,8 @@ rules:
     expired:
       allowed: false
 
-      # also check for certificates expiring in upcoming x months
-      expiring_within: 6
+      # also check for certificates expiring in upcoming period
+      prevent_expiring: in 1 year
 
     # optional list of files that are omitted from this rule
     exceptions: 

@@ -90,8 +90,8 @@ Firmware images with reported SSL certificates that are expired will fail this p
     expired:
       allowed: false
 
-      # optionally check for certificates expiring in upcoming x months
-      expiring_within: 6
+      # also check for certificates expiring in upcoming period
+      prevent_expiring: in 6 months
 
       # optional list of files exempt from this rule (i.e. expired certificates in /etc/ssl are ok). 
       exceptions:
