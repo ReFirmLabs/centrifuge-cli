@@ -104,7 +104,7 @@ You can see the available commands by viewing the help output:
 .. code-block:: bash
 
   $ centrifuge report --help
-  Usage: main.py report [OPTIONS] COMMAND [ARGS]...
+  Usage: centrifuge report [OPTIONS] COMMAND [ARGS]...
   
   Options:
     --ufid ID  Centrifuge report ID  [required]
