@@ -8,8 +8,9 @@ import json
 import time
 import yaml
 import click
-import datetime
+from datetime import datetime
 import chevron
+import dateparser
 
 CSV_HEADER = ["Policy Name", "Compliant"]
 POLICY_DETAIL_MAPPING = {
@@ -133,6 +134,15 @@ class CentrifugePolicyCheck(object):
         json_data = self.certificates_json
         if not value.get('expired', {}).get('allowed'):
             if json_data.get("count") > 0:
+                expired_check_time = int(time.time())
+                expiring_within_threshold = value.get('expired', {}).get('prevent_expiring', '')
+                if expiring_within_threshold:
+                    dt = dateparser.parse(expiring_within_threshold)
+                    if dt < datetime.now():
+                        raise RuntimeError('Certificate expiring_within policy date is in the past, be sure to use "in" if specifying a time interval i.e. "in 2 weeks"')
+                    expired_in_future_time = int(dt.timestamp())
+                else:
+                    expired_in_future_time = expired_check_time
                 # Remove exceptions from results if any
                 for cert in json_data.get("results"):
                     exceptions = value.get("exceptions", [])
@@ -144,10 +154,13 @@ class CentrifugePolicyCheck(object):
                     if cert["paths"]:
                         # Check if certificate is expired.
                         cert_expiry_timestamp = int(cert["validityEnd"][:-3])
-                        if int(time.time()) > cert_expiry_timestamp:
+                        if expired_in_future_time > cert_expiry_timestamp:
                             rule_passed = False
                             for path in cert["paths"]:
-                                reason = f'certificate expired at {path}'
+                                if expired_check_time > cert_expiry_timestamp:
+                                    reason = f'certificate expired at {path}'
+                                else:
+                                    reason = f'certificate will expire before {expiring_within_threshold} at {path}'
                                 reasons.append(reason)
                                 self.verboseprint(f'...failing: {reason}')
         return rule_passed, reasons
@@ -215,7 +228,7 @@ class CentrifugePolicyCheck(object):
         cvssScoreThreshold = value.get("cvssScoreThreshold", 10.0)
         cveAgeThreshold = value.get("cveAgeThreshold", 0)
         if cveAgeThreshold > 0 and cveAgeThreshold < 1999:
-            current_year = int(datetime.datetime.now().year)
+            current_year = int(datetime.now().year)
             cveAgeThreshold = current_year - cveAgeThreshold
         if json_data["count"] > 0:
             for guardian_obj in json_data.get("results"):
