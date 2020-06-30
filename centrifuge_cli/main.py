@@ -286,11 +286,10 @@ def info(cli):
     return(result)
 
 
-@report.command()
+@report.command(deprecated=True)
 @pass_cli
 def crypto(cli):
-    click.echo('crypto is a deprecated endpoint and will be removed in future releases, please migrate to certificates and privatekeys',
-               err=True)
+    """deprecated (use certificates, public-keys, and private-keys)"""
     result = cli.do_GET(f'/api/report/crypto/{cli.ufid}', query_list=['sorters[0][field]=path',
                                                                       'sorters[0][dir]=asc'])
     cli.echo(result)

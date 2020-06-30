@@ -105,21 +105,27 @@ You can see the available commands by viewing the help output:
 
   $ centrifuge report --help
   Usage: centrifuge report [OPTIONS] COMMAND [ARGS]...
-
+  
   Options:
     --ufid ID  Centrifuge report ID  [required]
     --help     Show this message and exit.
 
   Commands:
+    binary-hardening
+    certificates
+    check-policy
     code-emulated
     code-static
     code-summary
-    crypto
+    crypto              deprecated (use certificates, public-keys, and...
     delete
     guardian
     info
     passhash
+    private-keys
+    public-keys
     sbom
+    security-checklist
 
 Get basic information about the report (User, Make, Model, Version, filename, etc):
 
@@ -139,11 +145,23 @@ Get Password Hashes:
 
     $ centrifuge report --ufid=<REPORT_ID> passhash
 
-Get Crypto Keys:
+Get Certificates:
 
 .. code-block:: bash
 
-    $ centrifuge report --ufid=<REPORT_ID> crypto
+    $ centrifuge report --ufid=<REPORT_ID> certificates
+
+Get Public Keys:
+
+.. code-block:: bash
+
+    $ centrifuge report --ufid=<REPORT_ID> public-keys
+
+Get Private Keys:
+
+.. code-block:: bash
+
+    $ centrifuge report --ufid=<REPORT_ID> private-keys
 
 Get SBOM Results:
 
@@ -156,6 +174,14 @@ Get Security Checklist Results:
 .. code-block:: bash
 
     $ centrifuge report --ufid=<REPORT_ID> security-checklist
+
+Get Legacy Crypto Results (firmware uploaded before September 30th 2019). Refer to 
+``certificates``, ``public-key``, and ``private-key`` now.
+
+.. code-block:: bash
+
+    $ centrifuge report --ufid=<REPORT_ID> crypto
+
 
 The code analysis section is a little bit more complicated, since the data is
 more structured. To understand how to access this data you need to understand
