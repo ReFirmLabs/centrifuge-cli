@@ -219,9 +219,12 @@ def get_stats_obj(cli, ctx, include_individuals):
     cli.limit = -1
 
     reports_json = json.loads(ctx.invoke(list_command))
-    users_json = json.loads(ctx.invoke(users_list))
+    account_json = json.loads(ctx.invoke(account_info))
+    users_json = None
+    if account_json['isAdministrator']:
+        users_json = json.loads(ctx.invoke(users_list))
 
-    stats_obj = CentrifugeStats(reports_json, users_json, include_individuals)
+    stats_obj = CentrifugeStats(reports_json, users_json, account_json, include_individuals)
 
     cli.echo_enabled = True
     cli.outfmt = outfmt
@@ -532,6 +535,14 @@ def new(cli, email, password, orgid, admin, expires, no_expire):
         'expiresAt': expiresAt}
 
     result = cli.do_POST('/api/user', post_data)
+    cli.echo(result)
+    return(result)
+
+
+@cli.command(name='account-info')
+@pass_cli
+def account_info(cli):
+    result = cli.do_GET(f'/api/user/account')
     cli.echo(result)
     return(result)
 
