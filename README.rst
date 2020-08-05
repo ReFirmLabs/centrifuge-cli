@@ -251,7 +251,11 @@ Gathering Upload Statistics
 For deployments that support multiple organizations or business units we have the ability
 to gather useful statistics for the uploaded firmware based on organization. One command 
 will simply give you the total number of firmware that each organization uploaded, the other
-command will give more detailed information about each upload. 
+command will give more detailed information about each upload.
+
+To summarize multiple organizations you need to be an Administrator. If these commands are
+run by a non-admin, instead of summarizing multiple organizations it will summarize the users
+within that organization.
 
 To get upload count statistics:
 

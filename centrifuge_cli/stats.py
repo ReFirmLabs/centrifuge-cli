@@ -8,17 +8,26 @@ from urllib.parse import urlparse, urlunparse
 
 class CentrifugeStats(object):
 
-    def __init__(self, reports_json, users_json, include_individuals=False):
+    def __init__(self, reports_json, users_json, account_json, include_individuals=False):
         self.reports_json = reports_json
         self.users_json = users_json
+        self.account_json = account_json
 
         self.user_id_to_org_name = {}
-        for user in self.users_json:
-            org = user['organization']
-            if org is not None:
-                self.user_id_to_org_name[user['id']] = org
-            elif include_individuals:
-                self.user_id_to_org_name[user['id']] = user['username']
+        if users_json is not None:
+            for user in self.users_json:
+                org = user['organization']
+                if org is not None:
+                    self.user_id_to_org_name[user['id']] = org
+                elif include_individuals:
+                    self.user_id_to_org_name[user['id']] = user['username']
+        else:
+            # non-admins dont have access to the user list so derive it
+            # from the report list
+            for report in self.reports_json['results']:
+                user_id = report['User']['id']
+                if user_id not in self.user_id_to_org_name:
+                    self.user_id_to_org_name[user_id] = report['User']['username']
 
     def get_summary(self, outfmt):
         org_name_to_upload_md5 = {}
@@ -39,7 +48,10 @@ class CentrifugeStats(object):
 
             data.append([org, count])
 
-        df = pd.DataFrame(data, columns=['Organization', 'Unique Uploads'])
+        if self.users_json is not None:
+            df = pd.DataFrame(data, columns=['Organization', 'Unique Uploads'])
+        else:
+            df = pd.DataFrame(data, columns=['Username', 'Unique Uploads'])
 
         if outfmt == 'csv':
             return(df.to_csv())
