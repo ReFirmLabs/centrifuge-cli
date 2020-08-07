@@ -94,7 +94,7 @@ class Cli(object):
                 if total >= count or (self.limit > -1 and total >= self.limit):
                     break
 
-            return json.dumps({'count': total, 'results': results}, indent=2, sort_keys=True)
+            data = {'count': total, 'results': results}
 
         else:
             url = self.build_url(path, query_list, self.limit)
@@ -308,7 +308,7 @@ def passhash(cli):
 @pass_cli
 def guardian(cli):
     result = cli.do_GET(f'/api/report/{cli.ufid}/analyzer-results', query_list=['affected=true&sorters[0][field]=name',
-                                                                                'sorters[0][dir]=asc'])
+                                                                                'sorters[0][dir]=asc'], paginated=True)
     cli.echo(result)
     return(result)
 
