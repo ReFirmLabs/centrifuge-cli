@@ -547,6 +547,14 @@ def account_info(cli):
     return(result)
 
 
+@cli.command(name='component-detectors')
+@pass_cli
+def component_detectors(cli):
+    result = cli.do_GET(f'/api/report/components')
+    cli.echo(result)
+    return(result)
+
+
 @cli.group()
 @click.option('--userid', metavar='ID', help='User ID of the user being modified', required=True)
 @pass_cli
