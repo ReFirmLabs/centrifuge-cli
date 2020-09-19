@@ -269,15 +269,15 @@ To get detailed upload statistics:
 
     $ centrifuge reports stats-detailed
 
-Listing Centrifuge Component Detectors
---------------------------------------
+Listing Centrifuge Supported Component Detectors
+------------------------------------------------
 
 Centrifuge uses binary heuristic detection to identify 3rd party components in firmware,
 and also maps known vulnerabilities (CVEs) to those components. New components and CVEs
 are added regularly to Centrifuge.
 
-To get a list of the components and a count of CVEs for each component:
+To get a list of the supported components and a count of CVEs for each component:
 
 .. code-block:: bash
 
-    $ centrifuge component-detectors
+    $ centrifuge supported-components

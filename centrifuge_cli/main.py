@@ -547,7 +547,7 @@ def account_info(cli):
     return(result)
 
 
-@cli.command(name='component-detectors')
+@cli.command(name='supported-components')
 @pass_cli
 def component_detectors(cli):
     result = cli.do_GET(f'/api/report/components')
