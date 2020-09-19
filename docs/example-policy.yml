@@ -77,3 +77,23 @@ rules:
   securityChecklist:
     # any security checklist results should result in failure in most policies
     allowed: false
+
+  sbom:
+    # components that are not allowed in firmware
+    prohibitedComponents:
+      - tcpdump
+      - libpcap
+      - gdbserver
+
+    # components using prohibited licenses 
+    licenses:
+      # use SPDX license identifiers (https://spdx.org/licenses/)
+      # can use regex
+      prohibitedLicenses:
+        - GPL-1.0-or-later
+        - GPL-*
+
+      # components approved to use prohibited licenses
+      exceptions:
+        - busybox
+        - dnsmasq

@@ -17,3 +17,5 @@ rules:
     include: [/opt/vendor/bin/*, /usr/lib/*]
   securityChecklist:
     allowed: false
+  sbom:
+    prohibitedComponents: [tcpdump, libpcap, gdbserver]
