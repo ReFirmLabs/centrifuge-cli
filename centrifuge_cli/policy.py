@@ -55,6 +55,12 @@ POLICY_DETAIL_MAPPING = {
         "method": "checkSecurityChecklistRule",
         "status": "Fail",
         "reasons": []
+    },
+    "sbom": {
+        "name": "SBOM Components",
+        "method": "checkSBOMRule",
+        "status": "Fail",
+        "reasons": []
     }
 }
 POLICIES = [
@@ -64,7 +70,8 @@ POLICIES = [
     'code',
     'guardian',
     'binaryHardening',
-    'securityChecklist'
+    'securityChecklist',
+    'sbom'
 ]
 
 
@@ -80,6 +87,7 @@ class CentrifugePolicyCheck(object):
                  code_summary_json,
                  passhash_json,
                  checklist_json,
+                 sbom_json,
                  info_json,
                  verbose=False):
         self.certificates_json = certificates_json
@@ -89,6 +97,7 @@ class CentrifugePolicyCheck(object):
         self.code_summary_json = code_summary_json
         self.passhash_json = passhash_json
         self.checklist_json = checklist_json
+        self.sbom_json = sbom_json
         self.info_json = info_json
         self.verbose = verbose
 
@@ -298,6 +307,34 @@ class CentrifugePolicyCheck(object):
                     reasons.append(reason)
                     self.verboseprint(f'...failing: {reason}')
                     rule_passed = False
+        return rule_passed, reasons
+
+    def checkSBOMRule(self, value):
+        self.verboseprint("Checking SBOM Rule...")
+        rule_passed = True
+        reasons = []
+        sbom = self.sbom_json
+        prohibitedComponents = value.get("prohibitedComponents")
+        prohibitedLicenses = []
+        for r in value.get("licenses", {}).get("prohibitedLicenses", []):
+            prohibitedLicenses.append(re.compile(r))
+        exceptedLicenseComponents = value.get("licenses", {}).get("exceptions", [])
+        if sbom.get("count") > 0:
+            for component in sbom.get("results"):
+                if component.get("name") in prohibitedComponents:
+                    reason = f'SBOM Component {component["name"]} is prohibited'
+                    reasons.append(reason)
+                    self.verboseprint(f'...failing: {reason}')
+                    rule_passed = False
+                if not component.get("name") in exceptedLicenseComponents:
+                    licenseUsed = component.get('license')
+                    for r in prohibitedLicenses:
+                        if re.match(r, licenseUsed):
+                            reason = f'SBOM Component {component["name"]} uses prohibited license {component["license"]}'
+                            reasons.append(reason)
+                            self.verboseprint(f'...failing: {reason}')
+                            rule_passed = False
+                            break
         return rule_passed, reasons
 
     def call_policy_method(self, policy_name, ruledef):

@@ -319,7 +319,7 @@ def guardian(cli):
 @report.command()
 @pass_cli
 def sbom(cli):
-    result = cli.do_GET(f'/api/report/{cli.ufid}/components/pathmatches')
+    result = cli.do_GET(f'/api/report/{cli.ufid}/sbom')
     cli.echo(result)
     return(result)
 
@@ -418,6 +418,7 @@ def check_policy(cli, ctx, policy_yaml, report_template):
     code_summary_json = json.loads(ctx.invoke(code_summary))
     passhash_json = json.loads(ctx.invoke(passhash))
     checklist_json = json.loads(ctx.invoke(security_checklist))
+    sbom_json = json.loads(ctx.invoke(sbom))
     info_json = json.loads(ctx.invoke(info))
 
     policy_obj = CentrifugePolicyCheck(certificates_json,
@@ -427,6 +428,7 @@ def check_policy(cli, ctx, policy_yaml, report_template):
                                        code_summary_json,
                                        passhash_json,
                                        checklist_json,
+                                       sbom_json,
                                        info_json)
 
     policy_obj.check_rules(policy_yaml)

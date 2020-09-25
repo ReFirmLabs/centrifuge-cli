@@ -189,3 +189,33 @@ Checklist results.
   securityChecklist:
     allowed: false
 ```
+
+### Rule: SBOM
+
+Software Bill of Materials (SBOM) identifies open source components that are used in firmware images.
+`prohbitedComponents` can list components that should not be present in final firmware images, such as gdbserver
+or tcpdump.
+`prohibitedLicenses` defines software licenses which are prohibited in the identified components in the firmware.
+The license identifiers match those in the SPDX standard. A common use case could be to block restrictive licenses
+like GPL, but define exceptions for specific components that have been approved for distribution.
+```
+  sbom:
+    # components that are not allowed in firmware
+    prohibitedComponents:
+      - tcpdump
+      - libpcap
+      - gdbserver
+
+    # components using prohibited licenses 
+    licenses:
+      # use SPDX license identifiers (https://spdx.org/licenses/)
+      # can use regex
+      prohibitedLicenses:
+        - GPL-1.0-or-later
+        - GPL-*
+
+      # components approved to use prohibited licenses
+      exceptions:
+        - busybox
+        - dnsmasq
+```
