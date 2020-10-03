@@ -4,6 +4,9 @@ The `policy` subcommand is a tool that enables users to apply their own policy r
 
 This command line tool takes a policy file that defines the policy rules that you want to apply. It gathers report data via the Centrifuge REST API, for which you have to supply your Centrifuge API authentication token, and generates an output file containing the results of the policy as it applies to the given Centrifuge report.
 
+Optionally, the policy rules can be mapped against a standard such as the OWASP IoT Top 10. See the section below
+on defining a standard for more details
+
 ## Prerequisites
 
 Before you begin, ensure you have met the following requirements:
@@ -93,7 +96,7 @@ Firmware images with reported SSL certificates that are expired will fail this p
       # also check for certificates expiring in upcoming period
       prevent_expiring: in 6 months
 
-      # optional list of files exempt from this rule (i.e. expired certificates in /etc/ssl are ok). 
+      # optional list of files exempt from this rule (i.e. expired certificates in /etc/ssl are ok).
       exceptions:
         - /etc/ssl/*
 ```
@@ -206,7 +209,7 @@ like GPL, but define exceptions for specific components that have been approved 
       - libpcap
       - gdbserver
 
-    # components using prohibited licenses 
+    # components using prohibited licenses
     licenses:
       # use SPDX license identifiers (https://spdx.org/licenses/)
       # can use regex
@@ -218,4 +221,46 @@ like GPL, but define exceptions for specific components that have been approved 
       exceptions:
         - busybox
         - dnsmasq
+```
+
+### Mapping policy results to a standard
+
+Policy results can be mapped to a security standard. Each element of a standard that relates to a Centrifuge
+analysis result can be defined, and then the policy rules that apply to that standard are listed. If the
+policy rule fails, then the element of the standard also fails.
+
+This is optional - standard mapping is only performed if the `standard` tag is present.
+
+Here is an example mapping the two of the elements of the OWASP IoT Top 10 to Centrifuge policy results:
+```
+standard:
+  name: IoT OWASP Top 10
+
+  description: >
+    The OWASP Foundation publishes a list of the Top 10 things to
+    avoid when building, deploying or managing IoT systems 
+    (https://owasp.org/www-project-internet-of-things/). Centrifuge
+    security policies map to a subset of the Top 10 rules.
+  
+  mappings:
+    - item: I1
+      title: I1 - Weak, Guessable, or Hardcoded Passwords
+      description: >
+        Centrifuge detects hard coded accounts and weak passwords.
+      policies:
+        - passwordHashes
+
+    - item: I2
+      title: I2 - Insecure Network Services
+      description: >
+        Centrifuge detects a number of issues which can be a source
+        of insecure networking services, including expired certificates,
+        use of private keys, poor code, lack of binary hardening, or
+        known backdoors and exploits. 
+      policies:
+        - certificates
+        - privateKeys
+        - code
+        - binaryHardening
+        - securityChecklist
 ```
