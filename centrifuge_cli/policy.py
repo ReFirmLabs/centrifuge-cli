@@ -389,14 +389,14 @@ class CentrifugePolicyCheck(object):
             }
             final_result.update({"reasons": policy_detail.get("reasons")})
             final_result_dict.get("results").append(final_result)
-        
+
         if "standard" in self.yaml_config:
             standard = self.yaml_config["standard"]
             sr = {
-                    "name": standard["name"],
-                    "description": standard["description"],
-                    "compliant": "Pass",
-                    "items": []
+                "name": standard["name"],
+                "description": standard["description"],
+                "compliant": "Pass",
+                "items": []
             }
             for mapping in standard["mappings"] or []:
                 item = {
