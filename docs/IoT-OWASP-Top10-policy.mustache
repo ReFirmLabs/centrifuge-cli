@@ -1,0 +1,51 @@
+<style>
+  #Pass {
+    color:green;
+  }
+  #Fail {
+    color:red;
+  }
+</style>
+<h1>Centrifuge Standard Compliance Report</h1>
+<b>Standard: </b>{{standard.name}}<br/>
+<b>Description: </b>{{standard.description}}<br/>
+<br/>
+<b>Vendor: </b>{{info.vendor}}<br/>
+<b>Device: </b>{{info.device}}<br/>
+<b>Version: </b>{{info.version}}<br/>
+
+<h2>Overall: <span id="{{standard.compliant}}">{{standard.compliant}}</span></h2>
+
+<h3><b>Standard Compliance Detail</b></h3>
+<ul>
+  {{#standard.items}}
+  <li>
+    <h3>{{title}} : <span id="{{compliant}}">{{compliant}}</span></h3>
+    {{description}}
+    <br/>
+    <ul>
+      {{#results}}
+      <li>
+        {{policy}} : <span id="{{compliant}}">{{compliant}}</span>
+      </li>
+      {{/results}}
+    </ul>
+  </li>
+  {{/standard.items}}
+</ul>
+
+<br/>
+<h3><b>Centrifuge Policy Compliance</b></h3>
+<ul>
+  {{#results}}
+  <li>
+    <h3>{{name}} : <span id="{{compliant}}">{{compliant}}</span></h3>
+    <ul>
+      {{#reasons}}
+        <li>{{.}}</li>
+      {{/reasons}}
+      <br/>
+    </ul>
+  </li>
+  {{/results}}
+</ul>

@@ -100,6 +100,7 @@ class CentrifugePolicyCheck(object):
         self.sbom_json = sbom_json
         self.info_json = info_json
         self.verbose = verbose
+        self.yaml_config = None
 
     def verboseprint(self, *args):
         """
@@ -316,9 +317,9 @@ class CentrifugePolicyCheck(object):
         sbom = self.sbom_json
         prohibitedComponents = value.get("prohibitedComponents")
         prohibitedLicenses = []
-        for r in value.get("licenses", {}).get("prohibitedLicenses", []):
+        for r in value.get("licenses", {}).get("prohibitedLicenses", []) or []:
             prohibitedLicenses.append(re.compile(r))
-        exceptedLicenseComponents = value.get("licenses", {}).get("exceptions", [])
+        exceptedLicenseComponents = value.get("licenses", {}).get("exceptions", []) or []
         if sbom.get("count") > 0:
             for component in sbom.get("results"):
                 if component.get("name") in prohibitedComponents:
@@ -388,6 +389,36 @@ class CentrifugePolicyCheck(object):
             }
             final_result.update({"reasons": policy_detail.get("reasons")})
             final_result_dict.get("results").append(final_result)
+
+        if "standard" in self.yaml_config:
+            standard = self.yaml_config["standard"]
+            sr = {
+                "name": standard["name"],
+                "description": standard["description"],
+                "compliant": "Pass",
+                "items": []
+            }
+            for mapping in standard["mappings"] or []:
+                item = {
+                    "item": mapping["item"],
+                    "title": mapping["title"],
+                    "description": mapping["description"],
+                    "compliant": "Pass",
+                    "results": []
+                }
+                for policy in mapping["policies"] or []:
+                    # Check if policy passed or failed
+                    if policy in POLICY_DETAIL_MAPPING:
+                        compliant = POLICY_DETAIL_MAPPING[policy].get("status")
+                        item.get("results").append({
+                            "policy": POLICY_DETAIL_MAPPING[policy].get("name"),
+                            "compliant": compliant
+                        })
+                        if compliant != "Pass":
+                            item["compliant"] = "Fail"
+                            sr["compliant"] = "Fail"
+                sr.get("items").append(item)
+            final_result_dict["standard"] = sr
         return final_result_dict
 
     def generate_json(self):
@@ -402,10 +433,10 @@ class CentrifugePolicyCheck(object):
     def check_rules(self, config_file):
         with open(config_file, 'r') as stream:
             try:
-                res = yaml.safe_load(stream)
+                self.yaml_config = yaml.safe_load(stream)
                 for _, rule in enumerate(POLICY_DETAIL_MAPPING):
-                    if rule in res['rules']:
-                        self.checkRule(rule, res['rules'][rule])
+                    if rule in self.yaml_config['rules']:
+                        self.checkRule(rule, self.yaml_config['rules'][rule])
                     else:
                         POLICY_DETAIL_MAPPING.get(rule).update({"status": "No Policy Specified"})
             except yaml.YAMLError as exc:

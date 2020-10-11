@@ -1,0 +1,164 @@
+# version of the policy specification
+policyVersion: 1.0
+
+# This policy file maps the IoT OWASP Top 10 (https://owasp.org/www-project-internet-of-things/)
+# to the security analysis provided by Centrifuge. In some areas where OWASP is not specific
+# we provide our interpretation (for example, the definition of "out of date components").
+
+# Standard files have two sections: 
+#   rules: which define the policy for individual Centrifuge analyzers to pass or fail
+#   standard: which defines the standard and maps items in the standard to applicable rules
+
+# For rules where you have confirmed there is not an issue you can add the item as an exception
+# (for example private keys) 
+
+rules:
+
+  # Expired certificates can lead to insecure network services (I2) and
+  # insecure Data Transfer and Storage (I7)
+  certificates:
+    expired:
+      allowed: false
+
+      # also check for certificates expiring in upcoming period
+      prevent_expiring: in 6 months
+
+    # optional list of files that are omitted from this rule
+    exceptions: 
+
+  # Use of private keys could results in compromised public keys or 
+  # insecure storage of user data. Impacts Insecure Network Services (I2),
+  # Insecure Data Transfer and Storage (I7)
+  privateKeys:
+    allowed: false
+    # optional list of files that are omitted from this rule
+    exceptions:
+      - /usr/*
+
+  # Presence of hardcoded accounts and/or weak / guessable passwords (I1)
+  passwordHashes:
+    # whether defined user accounts are allowed or not
+    allowUserAccounts: false
+
+    # any hashes with the following algorithms will fail the policy check
+    weakAlgorithms:
+      - des
+      - md5
+
+  # Presence of critical flaws (potential 0-days) potentially create
+  # Insecure Network Services (I2), as well as Insecure or Outadated Components (I5)
+  code:
+    flaws:
+      # allow any potential flaws
+      allowed: true
+
+      # allow critical (emulated) flaws
+      allowCritical: false
+
+    # optional list of files that are omitted from this rule
+    exceptions:
+
+  # Evaluation of 3rd party components for Insecure or Outdated Components (I5)
+  # Interpreting Insecure as CVSS >= 7.0, and outdated is components with CVEs > 2 years
+  guardian:
+    # any CVEs found at or above this threshold will cause the policy check to fail
+    cvssScoreThreshold: 7.0
+
+    # any CVEs from this year or older will cause the policy check to fail
+    # either put year (i.e., 2017) or # years (i.e., 2 would fail 2018 or earlier CVEs in 2020)
+    cveAgeThreshold: 2
+
+    # optional list of files that are omitted from this rule
+    exceptions:
+
+  # Binary hardening is recommended best practice to provide secure network services and components (I2, I5)
+  # enabling this will be enforce binary hardening on all executables in the firmware. Optionally use
+  # incldue directive to whitelist check on specific directories
+  binaryHardening:
+    # a list of hardening features required for ELF binaries
+    # supported features: NX, PIE, RELRO, CANARY, STRIPPED
+    requiredFeatures:
+      - NX
+      - PIE
+      - RELRO
+      - CANARY
+      - STRIPPED
+    # optional whitelist of binaries to check for above features.
+    # if omitted, all binaries will be checked
+    include:
+  
+  # Detection of known backdoors, exploits and malware results in Insecure Network Services (I2)
+  securityChecklist:
+    # any security checklist results should result in failure in most policies
+    allowed: false
+
+  # Debug / network sniffing components should not be included in production firmware as best practice
+  # relates to Insecure Components (I5)
+  sbom:
+    # components that are not allowed in firmware
+    prohibitedComponents:
+      - tcpdump
+      - libpcap
+      - gdbserver
+
+    # Licensing is not part of OWASP standard 
+    licenses:
+      # use SPDX license identifiers (https://spdx.org/licenses/)
+      # can use regex
+      prohibitedLicenses:
+  
+      # components approved to use prohibited licenses
+      exceptions:
+
+standard:
+  name: IoT OWASP Top 10
+
+  description: >
+    The OWASP Foundation publishes a list of the Top 10 things to
+    avoid when building, deploying or managing IoT systems 
+    (https://owasp.org/www-project-internet-of-things/). Centrifuge
+    security policies map to a subset of the Top 10 rules.
+  
+  mappings:
+    - item: I1
+      title: I1 - Weak, Guessable, or Hardcoded Passwords
+      description: >
+        Centrifuge detects hard coded accounts and weak passwords.
+      policies:
+        - passwordHashes
+
+    - item: I2
+      title: I2 - Insecure Network Services
+      description: >
+        Centrifuge detects a number of issues which can be a source
+        of insecure networking services, including expired certificates,
+        use of private keys, poor code, lack of binary hardening, or
+        known backdoors and exploits. 
+      policies:
+        - certificates
+        - privateKeys
+        - code
+        - binaryHardening
+        - securityChecklist
+
+    - item: I5
+      title: I5 - Use of Insecure or Outdated Components
+      description: >
+        Centrifuge detects components with known vulnerabilities,
+        poor code, lack of binary hardening and components that
+        should not be included in production firmware.
+      policies:
+        - code
+        - guardian
+        - binaryHardening
+        - sbom
+
+    - item: I7
+      title: I7 - Insecure Data Transfer and Storage
+      description: >
+        Centrifuge detects the presence of expired certificates and
+        private keys which, unless excepted after manual review could
+        result in insecure data transfer and storage.
+      policies:
+        - certificates
+        - privateKeys
