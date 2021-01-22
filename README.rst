@@ -1,9 +1,9 @@
-centrifuge-cli: The official Python CLI for Centrifuge
-=======================================================
+centrifuge-cli: The official Python CLI for Binwalk Enterprise
+==============================================================
 
-Centrifuge is an automated firmware analysis platform. It allows users to upload
-their firmware images to be analyzed for various security issues. This utility
-gives users the ability to interact and automate tasks via the Centrifuge
+Binwalk Enterprise is an automated firmware analysis platform. It allows users to
+upload their firmware images to be analyzed for various security issues. This
+utility gives users the ability to interact and automate tasks via the Binwalk
 RESTful API.
 
 Features
@@ -23,7 +23,7 @@ Check your Python version (must be 3.6 or later):
 
     $ python --version
 
-To install the Centrifuge CLI, simply:
+To install the Binwalk Enterprise CLI, simply:
 
 .. code-block:: bash
 
@@ -42,7 +42,7 @@ To query the list of available reports:
 
     $ centrifuge reports list
 
-Under the hood the Centrifuge CLI is using python Pandas data frames to report
+Under the hood the Binwalk Enterprise CLI is using python Pandas data frames to report
 the results to the user. Since the API is json, which has hierarchical structure
 to it, we have chosen to flatten all the results into a column/row format for
 viewing inside of a terminal or for importing into spreadsheets, etc. However
@@ -71,7 +71,7 @@ only the original filename and model number of the firmware that was uploaded:
 
 Uploading Firmware
 ------------------
-Uploading firmware to centrifuge is quite simple. All you need to do is supply
+Uploading firmware to Binwalk Enterprise is quite simple. All you need to do is supply
 make/model/version and the file you want to upload:
 
 .. code-block:: bash
@@ -269,12 +269,12 @@ To get detailed upload statistics:
 
     $ centrifuge reports stats-detailed
 
-Listing Centrifuge Supported Component Detectors
-------------------------------------------------
+Listing Binwalk Enterprise Supported Component Detectors
+--------------------------------------------------------
 
-Centrifuge uses binary heuristic detection to identify 3rd party components in firmware,
+Binwalk Enterprise uses binary heuristic detection to identify 3rd party components in firmware,
 and also maps known vulnerabilities (CVEs) to those components. New components and CVEs
-are added regularly to Centrifuge.
+are added regularly to Binwalk Enterprise.
 
 To get a list of the supported components and a count of CVEs for each component:
 

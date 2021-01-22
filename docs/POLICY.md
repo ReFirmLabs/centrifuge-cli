@@ -1,8 +1,8 @@
-# Centrifuge Policy Check
+# Binwalk Policy Check
 
-The `policy` subcommand is a tool that enables users to apply their own policy rules against a Centrifuge report.
+The `policy` subcommand is a tool that enables users to apply their own policy rules against a Binwalk report.
 
-This command line tool takes a policy file that defines the policy rules that you want to apply. It gathers report data via the Centrifuge REST API, for which you have to supply your Centrifuge API authentication token, and generates an output file containing the results of the policy as it applies to the given Centrifuge report.
+This command line tool takes a policy file that defines the policy rules that you want to apply. It gathers report data via the Binwalk REST API, for which you have to supply your Binwalk API authentication token, and generates an output file containing the results of the policy as it applies to the given Binwalk report.
 
 Optionally, the policy rules can be mapped against a standard such as the OWASP IoT Top 10. See the section below
 on defining a standard for more details
@@ -12,31 +12,31 @@ on defining a standard for more details
 Before you begin, ensure you have met the following requirements:
 
 * You have python 3 installed (tested with python 3.7)
-* You have an active Centrifuge account with a valid API authtoken
-* You have a completed Centrifuge report that you wish to check
-* You have installed the latest version of the Centrifuge command line tool (version 0.2.2 or later)
+* You have an active Binwalk account with a valid API authtoken
+* You have a completed Binwalk report that you wish to check
+* You have installed the latest version of the Binwalk command line tool (version 0.2.2 or later)
 
-## Installing the Centrifuge CLI
+## Installing the Binwalk CLI
 
 Tested on Linux with python 3.7
 ```
 pip3 install centrifuge-cli
 ```
 
-## Using Centrifuge Policy Check
+## Using Binwalk Policy Check
 
 ```
 # Command options:
 --policy-yaml : location of policy rules file (see below)
 --report-template : location of mustache-based template for compliance report
 
-# Check your policy against Centrifuge report 1234 and output CSV format (default)
+# Check your policy against Binwalk report 1234 and output CSV format (default)
 centrifuge report --ufid=<REPORT ID> check-policy --policy-yaml my-policy.yml
 
-# Check your policy against Centrifuge report 1234 and output json format
+# Check your policy against Binwalk report 1234 and output json format
 centrifuge --outfmt json report --ufid=<REPORT ID> check-policy --policy-yaml my-policy.yml
 
-# Check your policy against Centrifuge report 1234 and output full html compliance report using example template
+# Check your policy against Binwalk report 1234 and output full html compliance report using example template
 centrifuge report --ufid=<REPORT ID> check-policy --policy-yaml my-policy.yml --report-template example-policy-report.mustache > compliance_report.htm
 ```
 
@@ -225,13 +225,13 @@ like GPL, but define exceptions for specific components that have been approved 
 
 ### Mapping policy results to a standard
 
-Policy results can be mapped to a security standard. Each element of a standard that relates to a Centrifuge
+Policy results can be mapped to a security standard. Each element of a standard that relates to a Binwalk
 analysis result can be defined, and then the policy rules that apply to that standard are listed. If the
 policy rule fails, then the element of the standard also fails.
 
 This is optional - standard mapping is only performed if the `standard` tag is present.
 
-Here is an example mapping the two of the elements of the OWASP IoT Top 10 to Centrifuge policy results:
+Here is an example mapping the two of the elements of the OWASP IoT Top 10 to Binwalk policy results:
 ```
 standard:
   name: IoT OWASP Top 10
@@ -239,21 +239,21 @@ standard:
   description: >
     The OWASP Foundation publishes a list of the Top 10 things to
     avoid when building, deploying or managing IoT systems 
-    (https://owasp.org/www-project-internet-of-things/). Centrifuge
+    (https://owasp.org/www-project-internet-of-things/). Binwalk
     security policies map to a subset of the Top 10 rules.
   
   mappings:
     - item: I1
       title: I1 - Weak, Guessable, or Hardcoded Passwords
       description: >
-        Centrifuge detects hard coded accounts and weak passwords.
+        Binwalk detects hard coded accounts and weak passwords.
       policies:
         - passwordHashes
 
     - item: I2
       title: I2 - Insecure Network Services
       description: >
-        Centrifuge detects a number of issues which can be a source
+        Binwalk detects a number of issues which can be a source
         of insecure networking services, including expired certificates,
         use of private keys, poor code, lack of binary hardening, or
         known backdoors and exploits. 
