@@ -188,7 +188,7 @@ pass_cli = click.make_pass_decorator(Cli)
 @click.option('--apikey', envvar='CENTRIFUGE_APIKEY', required=True,
               metavar='KEY', help='Your Centrifuge API Key')
 @click.option('--limit', default=20, help='Number of results to return, use -1 for no limit')
-@click.option('--outfmt', default='human', help='Output format of command', type=click.Choice(['human', 'json', 'csv']))
+@click.option('--outfmt', default='human', help='Output format of command', type=click.Choice(['human', 'json', 'csv', 'sarif']))
 @click.option('--field', '-f', multiple=True, metavar='FIELD', help="Select field(s) when output is human or csv")
 @click.option('--ssl-no-verify', help="Disables SSL certificate verification", is_flag=True)
 @click.version_option(PACKAGE_VERSION)
@@ -437,6 +437,8 @@ def check_policy(cli, ctx, policy_yaml, report_template):
         result = policy_obj.generate_report(report_template)
     elif outfmt == 'json':
         result = policy_obj.generate_json()
+    elif outfmt == 'sarif':
+        result = policy_obj.generate_sarif()
     else:
         result = policy_obj.generate_csv()
 

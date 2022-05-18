@@ -36,6 +36,9 @@ centrifuge report --ufid=<REPORT ID> check-policy --policy-yaml my-policy.yml
 # Check your policy against Centrifuge report 1234 and output json format
 centrifuge --outfmt json report --ufid=<REPORT ID> check-policy --policy-yaml my-policy.yml
 
+# Check your policy against Centrifuge report 1234 and output sarif format
+centrifuge --outfmt sarif report --ufid=<REPORT ID> check-policy --policy-yaml my-policy.yml
+
 # Check your policy against Centrifuge report 1234 and output full html compliance report using example template
 centrifuge report --ufid=<REPORT ID> check-policy --policy-yaml my-policy.yml --report-template example-policy-report.mustache > compliance_report.htm
 ```
