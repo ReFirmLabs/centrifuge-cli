@@ -1,0 +1,88 @@
+# version of the policy specification
+policyVersion: 1.0
+
+# Define the policy rules to pass or fail a finished Centrifuge report.
+
+# All rule and rule exceptions are optional and will only be applied if
+# specified in this file. If a rule is not specified, it will be reported
+# as "No policy specified" in the results
+
+rules:
+
+  certificates:
+    expired:
+      allowed: false
+
+      # also check for certificates expiring in upcoming period
+      prevent_expiring: in 1 year
+
+    # optional list of files that are omitted from this rule
+    exceptions: 
+
+  privateKeys:
+    allowed: false
+    # optional list of files that are omitted from this rule
+    exceptions:
+
+  passwordHashes:
+    # whether defined user accounts are allowed or not
+    allowUserAccounts: false
+
+    # any hashes with the following algorithms will fail the policy check
+    weakAlgorithms:
+      - des
+      - md5
+
+  code:
+    flaws:
+      # allow any potential flaws
+      allowed: true
+
+      # allow critical (emulated) flaws
+      allowCritical: false
+
+    # optional list of files that are omitted from this rule
+    exceptions:
+
+  guardian:
+    # any CVEs found at or above this threshold will cause the policy check to fail
+    cvssScoreThreshold: 7.0
+
+    # any CVEs from this year or older will cause the policy check to fail
+    # either put year (i.e., 2017) or # years (i.e., 2 would fail 2018 or earlier CVEs in 2020)
+    cveAgeThreshold: 2
+
+    # optional list of files that are omitted from this rule
+    exceptions:
+
+  binaryHardening:
+    # a list of hardening features required for ELF binaries
+    # supported features: NX, PIE, RELRO, CANARY, STRIPPED
+    requiredFeatures:
+
+    # optional whitelist of binaries to check for above features.
+    # if omitted, all binaries will be checked
+    include:
+      - /lib/modules/*
+      - /opt/vendor/*
+      - /root/*
+  
+  securityChecklist:
+    # any security checklist results should result in failure in most policies
+    allowed: false
+
+  sbom:
+    # components that are not allowed in firmware
+    prohibitedComponents:
+      - tcpdump
+      - libpcap
+      - gdbserver
+
+    # components using prohibited licenses 
+    licenses:
+      # use SPDX license identifiers (https://spdx.org/licenses/)
+      # can use regex
+      prohibitedLicenses:
+
+      # components approved to use prohibited licenses
+      exceptions:

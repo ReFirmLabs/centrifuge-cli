@@ -179,11 +179,12 @@ class CentrifugePolicyCheck(object):
                         cert_expiry_timestamp = int(cert["validityEnd"][:-3])
                         if expired_in_future_time > cert_expiry_timestamp:
                             rule_passed = False
+                            subject = cert["subject"]["commonName"]
                             for path in cert["paths"]:
                                 if expired_check_time > cert_expiry_timestamp:
-                                    reason = self.reason('certificate-expired', f'certificate expired at {path}', path)
+                                    reason = self.reason('certificate-expired', f'Certificate "{subject}" expired at {path}', path)
                                 else:
-                                    reason = self.reason('certificate-expiring', f'certificate will expire before {expiring_within_threshold} at {path}', path)
+                                    reason = self.reason('certificate-expiring', f'Certificate "{subject}" will expire before "{expiring_within_threshold}" at {path}', path)
                                 reasons.append(reason)
                                 self.verboseprint(f'...failing: {reason["msg"]}')
         return rule_passed, reasons
@@ -266,7 +267,7 @@ class CentrifugePolicyCheck(object):
                 if float(guardian_obj["severity"]) > cvssScoreThreshold:
                     reason = self.reason(
                         'cvss-score-threshold',
-                        f'cvssScoreThreshold {guardian_obj["severity"]} for {guardian_obj["component"]} at {guardian_obj["path"]}',
+                        f'CVE Score threshold exceeded for {guardian_obj["name"]} ({guardian_obj["severity"]}) for {guardian_obj["component"]} at {guardian_obj["path"]}',
                         guardian_obj["path"])
                     reasons.append(reason)
                     self.verboseprint(f'...failing: {reason["msg"]}')
@@ -275,7 +276,7 @@ class CentrifugePolicyCheck(object):
                 if cveAge <= cveAgeThreshold:
                     reason = self.reason(
                         'cvss-age',
-                        f'cveAgeThreshold {guardian_obj["name"]} for {guardian_obj["component"]} at {guardian_obj["path"]}',
+                        f'CVE Age threshold exceeded for {guardian_obj["name"]} ({cveAge}) for {guardian_obj["component"]} at {guardian_obj["path"]}',
                         guardian_obj["path"]
                     )
                     reasons.append(reason)
@@ -360,7 +361,8 @@ class CentrifugePolicyCheck(object):
                 if component.get("name") in prohibitedComponents:
                     reason = self.reason(
                         'sbom-prohibited-component',
-                        f'SBOM Component {component["name"]} is prohibited'
+                        f'SBOM Component {component["name"]} is prohibited at {component["paths"][0]}',
+                        component["paths"][0]
                     )
                     reasons.append(reason)
                     self.verboseprint(f'...failing: {reason["msg"]}')
@@ -371,7 +373,8 @@ class CentrifugePolicyCheck(object):
                         if re.match(r, licenseUsed):
                             reason = self.reason(
                                 'sbom-prohibited-license',
-                                f'SBOM Component {component["name"]} uses prohibited license {component["license"]}',
+                                f'SBOM Component {component["name"]} uses prohibited license {component["license"]} at {component["paths"][0]}',
+                                component["paths"][0]
                             )
                             reasons.append(reason)
                             self.verboseprint(f'...failing: {reason["msg"]}')
@@ -486,79 +489,79 @@ class CentrifugePolicyCheck(object):
                                 {
                                     "id": "security-checklist",
                                     "shortDescription": {
-                                        "text": "should not include known malware, exploits or backdoors"
+                                        "text": "Known malware, exploits or backdoors"
                                     }
                                 },
                                 {
                                     "id": "certificate-expired",
                                     "shortDescription": {
-                                        "text": "disallow expired certificates"
+                                        "text": "Expired certificates"
                                     }
                                 },
                                 {
                                     "id": "certificate-expiring",
                                     "shortDescription": {
-                                        "text": "disallow certificates expiring within x months by policy"
+                                        "text": "Certificates expiring within x months by policy"
                                     }
                                 },
                                 {
                                     "id": "private-key",
                                     "shortDescription": {
-                                        "text": "disallow private keys"
+                                        "text": "Contains private keys"
                                     }
                                 },
                                 {
                                     "id": "binary-hardening",
                                     "shortDescription": {
-                                        "text": "compiler binary hardening settings must meet policy"
+                                        "text": "Compiler binary hardening settings must meet policy"
                                     }
                                 },
                                 {
                                     "id": "cvss-score-threshold",
                                     "shortDescription": {
-                                        "text": "disallow known CVEs above policy threshold"
+                                        "text": "Known CVEs above policy threshold"
                                     }
                                 },
                                 {
                                     "id": "cvss-age",
                                     "shortDescription": {
-                                        "text": "disallow known CVEs older the policy age"
+                                        "text": "Known CVEs older than policy age"
                                     }
                                 },
                                 {
                                     "id": "code-total-flaws",
                                     "shortDescription": {
-                                        "text": "disallow potential code flaws (buffer overflow / command injection)"
+                                        "text": "Potential code flaws (buffer overflow / command injection)"
                                     }
                                 },
                                 {
                                     "id": "code-critical-flaws",
                                     "shortDescription": {
-                                        "text": "disallow critical (emulated) code flaws"
+                                        "text": "Contains critical (emulated) code flaws"
                                     }
                                 },
                                 {
                                     "id": "allow-user-accounts",
                                     "shortDescription": {
-                                        "text": "disallow hard coded user accounts"
+                                        "text": "Contains hard coded user accounts"
                                     }
                                 },
                                 {
                                     "id": "weak-user-account-password-algorithm",
                                     "shortDescription": {
-                                        "text": "disallow use of weak user account password algorithms"
+                                        "text": "User accounts use weak password algorithms"
                                     }
                                 },
                                 {
                                     "id": "sbom-prohibited-component",
                                     "shortDescription": {
-                                        "text": "disallow use of prohibited SBOM components"
+                                        "text": "Contains prohibited SBOM components"
                                     }
                                 },
                                 {
                                     "id": "sbom-prohibited-license",
                                     "shortDescription": {
-                                        "text": "disallow use SBOM components with prohibited licenses"
+                                        "text": "Contains SBOM components with prohibited licenses"
                                     }
                                 },
                         ]
