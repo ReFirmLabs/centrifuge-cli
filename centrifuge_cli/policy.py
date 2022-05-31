@@ -474,7 +474,7 @@ class CentrifugePolicyCheck(object):
         with open(report_template, 'r') as f:
             return chevron.render(f, json_results)
 
-    def generate_sarif(self):
+    def generate_sarif(self, report_url):
         # Sarif header
         sarif = {
             "version": "2.1.0",
@@ -582,7 +582,7 @@ class CentrifugePolicyCheck(object):
                     "ruleId": reason["rule"],
                     "level": "error",
                     "message": {
-                        "text": reason["msg"]
+                        "text": f'{reason["msg"]} - [details]({report_url})'
                     },
                     "locations": [
                         {
