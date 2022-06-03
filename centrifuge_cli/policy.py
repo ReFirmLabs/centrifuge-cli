@@ -121,14 +121,14 @@ class CentrifugePolicyCheck(object):
                         filter(lambda path: re.search(regex, path), path_list))
                     exceptions_in_path = exceptions_in_path + exceptions
         return exceptions_in_path
-    
+
     def reason(self, rule, msg, uri=""):
         return {
             'msg': msg,
             'rule': rule,
             'uri': uri
         }
-    
+
     def reasons_just_msg(self, reasons):
         msgs = []
         for reason in reasons:
@@ -481,7 +481,7 @@ class CentrifugePolicyCheck(object):
             "$schema": "http://json.schemastore.org/sarif-2.1.0-rtm.4",
             "runs": [
                 {
-                  "tool": {
+                    "tool": {
                         "driver": {
                             "name": "Binwalk Enterprise",
                             "informationUri": "https://www.refirmlabs.com",
@@ -564,7 +564,7 @@ class CentrifugePolicyCheck(object):
                                         "text": "Contains SBOM components with prohibited licenses"
                                     }
                                 },
-                        ]
+                            ]
                         }
                     },
                     "artifacts": [],
@@ -588,13 +588,13 @@ class CentrifugePolicyCheck(object):
                         {
                             "physicalLocation": {
                                 "artifactLocation": {
-                                "uri": f'file://{reason["uri"]}'
+                                    "uri": f'file://{reason["uri"]}'
                                 }
                             }
                         }
                     ]
                 })
-        sarif.get("runs")[0].update({ "results": results })
+        sarif.get("runs")[0].update({"results": results})
 
         return json.dumps(sarif, indent=2, sort_keys=False)
 
