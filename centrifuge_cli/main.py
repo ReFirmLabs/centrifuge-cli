@@ -188,7 +188,7 @@ pass_cli = click.make_pass_decorator(Cli)
 @click.option('--apikey', envvar='CENTRIFUGE_APIKEY', required=True,
               metavar='KEY', help='Your Centrifuge API Key')
 @click.option('--limit', default=20, help='Number of results to return, use -1 for no limit')
-@click.option('--outfmt', default='human', help='Output format of command', type=click.Choice(['human', 'json', 'csv', 'sarif']))
+@click.option('--outfmt', default='human', help='Output format of command', type=click.Choice(['human', 'json', 'csv']))
 @click.option('--field', '-f', multiple=True, metavar='FIELD', help="Select field(s) when output is human or csv")
 @click.option('--ssl-no-verify', help="Disables SSL certificate verification", is_flag=True)
 @click.version_option(PACKAGE_VERSION)
@@ -404,10 +404,11 @@ def security_checklist(cli):
 @report.command(name='check-policy')
 @click.option('--policy-yaml', metavar='FILE', type=click.Path(), help='Centrifuge policy yaml file.', required=True)
 @click.option('--report-template', metavar='FILE', type=click.Path(), help='Policy report template file.', required=False)
+@click.option('--generate-sarif', default=False, help='Genearate sarif output.', is_flag=True, required=False)
 @click.option('--report-url', metavar='URL', help='URL to Centrifuge report.', required=False)
 @click.pass_context
 @pass_cli
-def check_policy(cli, ctx, policy_yaml, report_template, report_url):
+def check_policy(cli, ctx, policy_yaml, report_template, generate_sarif, report_url):
     outfmt = cli.outfmt
     cli.outfmt = 'json'
     cli.echo_enabled = False
@@ -436,10 +437,10 @@ def check_policy(cli, ctx, policy_yaml, report_template, report_url):
 
     if report_template:
         result = policy_obj.generate_report(report_template)
+    elif generate_sarif:
+        result = policy_obj.generate_sarif(report_url)
     elif outfmt == 'json':
         result = policy_obj.generate_json()
-    elif outfmt == 'sarif':
-        result = policy_obj.generate_sarif(report_url)
     else:
         result = policy_obj.generate_csv()
 
