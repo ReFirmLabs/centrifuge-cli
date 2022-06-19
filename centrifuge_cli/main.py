@@ -404,9 +404,11 @@ def security_checklist(cli):
 @report.command(name='check-policy')
 @click.option('--policy-yaml', metavar='FILE', type=click.Path(), help='Centrifuge policy yaml file.', required=True)
 @click.option('--report-template', metavar='FILE', type=click.Path(), help='Policy report template file.', required=False)
+@click.option('--generate-sarif', default=False, help='Genearate sarif output.', is_flag=True, required=False)
+@click.option('--report-url', metavar='URL', help='URL to Centrifuge report.', required=False)
 @click.pass_context
 @pass_cli
-def check_policy(cli, ctx, policy_yaml, report_template):
+def check_policy(cli, ctx, policy_yaml, report_template, generate_sarif, report_url):
     outfmt = cli.outfmt
     cli.outfmt = 'json'
     cli.echo_enabled = False
@@ -435,6 +437,8 @@ def check_policy(cli, ctx, policy_yaml, report_template):
 
     if report_template:
         result = policy_obj.generate_report(report_template)
+    elif generate_sarif:
+        result = policy_obj.generate_sarif(report_url)
     elif outfmt == 'json':
         result = policy_obj.generate_json()
     else:

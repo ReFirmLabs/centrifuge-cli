@@ -122,6 +122,19 @@ class CentrifugePolicyCheck(object):
                     exceptions_in_path = exceptions_in_path + exceptions
         return exceptions_in_path
 
+    def reason(self, rule, msg, uri=""):
+        return {
+            'msg': msg,
+            'rule': rule,
+            'uri': uri
+        }
+
+    def reasons_just_msg(self, reasons):
+        msgs = []
+        for reason in reasons:
+            msgs.append(reason['msg'])
+        return msgs
+
     def checkSecurityChecklistRule(self, value):
         if not value.get('allowed'):
             json_data = self.checklist_json
@@ -132,7 +145,7 @@ class CentrifugePolicyCheck(object):
                 for result in json_data['results']:
                     if result['statusCode'] == 1:
                         name = result['Analyzer']['name']
-                        reasons.append(f'{name} was found during Security Checklist scan')
+                        reasons.append(self.reason('security-checklist', f'{name} was found during Security Checklist scan'))
                 return False, reasons
 
         return True, []
@@ -166,13 +179,14 @@ class CentrifugePolicyCheck(object):
                         cert_expiry_timestamp = int(cert["validityEnd"][:-3])
                         if expired_in_future_time > cert_expiry_timestamp:
                             rule_passed = False
+                            subject = cert["subject"]["commonName"]
                             for path in cert["paths"]:
                                 if expired_check_time > cert_expiry_timestamp:
-                                    reason = f'certificate expired at {path}'
+                                    reason = self.reason('certificate-expired', f'Certificate "{subject}" expired at {path}', path)
                                 else:
-                                    reason = f'certificate will expire before {expiring_within_threshold} at {path}'
+                                    reason = self.reason('certificate-expiring', f'Certificate "{subject}" will expire before "{expiring_within_threshold}" at {path}', path)
                                 reasons.append(reason)
-                                self.verboseprint(f'...failing: {reason}')
+                                self.verboseprint(f'...failing: {reason["msg"]}')
         return rule_passed, reasons
 
     def checkPrivateKeyRule(self, value):
@@ -193,9 +207,9 @@ class CentrifugePolicyCheck(object):
                     if pk["paths"]:
                         rule_passed = False
                         for path in pk["paths"]:
-                            reason = f'private key found at {path}'
+                            reason = self.reason('private-key', f'private key found at {path}', path)
                             reasons.append(reason)
-                            self.verboseprint(f'...failing: {reason}')
+                            self.verboseprint(f'...failing: {reason["msg"]}')
         return rule_passed, reasons
 
     def check_files_for_binary_hardening(self, obj, value):
@@ -224,9 +238,10 @@ class CentrifugePolicyCheck(object):
                     if not path_included:
                         continue
                 if not self.check_files_for_binary_hardening(obj, value):
-                    reason = f'invalid binary hardening settings at {obj["paths"][0]}'
+                    path = obj["paths"][0]
+                    reason = self.reason('binary-hardening', f'invalid binary hardening settings at {path}', path)
                     reasons.append(reason)
-                    self.verboseprint(f'...failing: {reason}')
+                    self.verboseprint(f'...failing: {reason["msg"]}')
                     rule_passed = False
         return rule_passed, reasons
 
@@ -250,15 +265,22 @@ class CentrifugePolicyCheck(object):
                         self.verboseprint(f'...skipping exception {guardian_obj["path"]}')
                         continue
                 if float(guardian_obj["severity"]) > cvssScoreThreshold:
-                    reason = f'cvssScoreThreshold {guardian_obj["severity"]} for {guardian_obj["component"]} at {guardian_obj["path"]}'
+                    reason = self.reason(
+                        'cvss-score-threshold',
+                        f'CVE Score threshold exceeded for {guardian_obj["name"]} ({guardian_obj["severity"]}) for {guardian_obj["component"]} at {guardian_obj["path"]}',
+                        guardian_obj["path"])
                     reasons.append(reason)
-                    self.verboseprint(f'...failing: {reason}')
+                    self.verboseprint(f'...failing: {reason["msg"]}')
                     rule_passed = False
                 cveAge = int(guardian_obj["name"][4:8])
                 if cveAge <= cveAgeThreshold:
-                    reason = f'cveAgeThreshold {guardian_obj["name"]} for {guardian_obj["component"]} at {guardian_obj["path"]}'
+                    reason = self.reason(
+                        'cvss-age',
+                        f'CVE Age threshold exceeded for {guardian_obj["name"]} ({cveAge}) for {guardian_obj["component"]} at {guardian_obj["path"]}',
+                        guardian_obj["path"]
+                    )
                     reasons.append(reason)
-                    self.verboseprint(f'...failing: {reason}')
+                    self.verboseprint(f'...failing: {reason["msg"]}')
                     rule_passed = False
         return rule_passed, reasons
 
@@ -280,14 +302,22 @@ class CentrifugePolicyCheck(object):
                             self.verboseprint(f'...skipping exception {code_obj["path"]}')
                             continue
                     if not allowed and code_obj["totalFlaws"] > 0:
-                        reason = f'{code_obj["totalFlaws"]} total flaws in {code_obj["path"]}'
+                        reason = self.reason(
+                            'code-total-flaws',
+                            f'{code_obj["totalFlaws"]} total flaws in {code_obj["path"]}',
+                            code_obj["path"]
+                        )
                         reasons.append(reason)
-                        self.verboseprint(f'...failing: {reason}')
+                        self.verboseprint(f'...failing: {reason["msg"]}')
                         rule_passed = False
                     elif not critical and code_obj["emulatedFunctionCount"] > 0:
-                        reason = f'{code_obj["emulatedFunctionCount"]} critical flaws in {code_obj["path"]}'
+                        reason = self.reason(
+                            'code-critical-flaws',
+                            f'{code_obj["emulatedFunctionCount"]} critical flaws in {code_obj["path"]}',
+                            code_obj["path"]
+                        )
                         reasons.append(reason)
-                        self.verboseprint(f'...failing: {reason}')
+                        self.verboseprint(f'...failing: {reason["msg"]}')
                         rule_passed = False
         return rule_passed, reasons
 
@@ -298,15 +328,21 @@ class CentrifugePolicyCheck(object):
         json_data = self.passhash_json
         if json_data.get("count") > 0:
             if not value.get("allowUserAccounts", True):
-                reason = f'allowUserAccounts - identified {json_data.get("count")} accounts'
+                reason = self.reason(
+                    'allow-user-accounts',
+                    f'allowUserAccounts - identified {json_data.get("count")} accounts',
+                )
                 reasons.append(reason)
-                self.verboseprint(f'...failing: {reason}')
+                self.verboseprint(f'...failing: {reason["msg"]}')
                 rule_passed = False
             for hash_obj in json_data.get("results"):
                 if hash_obj.get("algorithm") in value.get("weakAlgorithms", []):
-                    reason = f'weakAlgorithm {hash_obj["algorithm"]} for user {hash_obj["username"]}'
+                    reason = self.reason(
+                        'weak-user-account-password-algorithm',
+                        f'weakAlgorithm {hash_obj["algorithm"]} for user {hash_obj["username"]}',
+                    )
                     reasons.append(reason)
-                    self.verboseprint(f'...failing: {reason}')
+                    self.verboseprint(f'...failing: {reason["msg"]}')
                     rule_passed = False
         return rule_passed, reasons
 
@@ -323,17 +359,25 @@ class CentrifugePolicyCheck(object):
         if sbom.get("count") > 0:
             for component in sbom.get("results"):
                 if component.get("name") in prohibitedComponents:
-                    reason = f'SBOM Component {component["name"]} is prohibited'
+                    reason = self.reason(
+                        'sbom-prohibited-component',
+                        f'SBOM Component {component["name"]} is prohibited at {component["paths"][0]}',
+                        component["paths"][0]
+                    )
                     reasons.append(reason)
-                    self.verboseprint(f'...failing: {reason}')
+                    self.verboseprint(f'...failing: {reason["msg"]}')
                     rule_passed = False
                 if not component.get("name") in exceptedLicenseComponents:
                     licenseUsed = component.get('license')
                     for r in prohibitedLicenses:
                         if re.match(r, licenseUsed):
-                            reason = f'SBOM Component {component["name"]} uses prohibited license {component["license"]}'
+                            reason = self.reason(
+                                'sbom-prohibited-license',
+                                f'SBOM Component {component["name"]} uses prohibited license {component["license"]} at {component["paths"][0]}',
+                                component["paths"][0]
+                            )
                             reasons.append(reason)
-                            self.verboseprint(f'...failing: {reason}')
+                            self.verboseprint(f'...failing: {reason["msg"]}')
                             rule_passed = False
                             break
         return rule_passed, reasons
@@ -363,7 +407,7 @@ class CentrifugePolicyCheck(object):
         writer.writeheader()
         for _, policy_detail in POLICY_DETAIL_MAPPING.items():
             row_data = {"Policy Name": policy_detail.get("name"), "Compliant": policy_detail.get("status")}
-            row_data.update({"Reasons": policy_detail.get("reasons")})
+            row_data.update({"Reasons": self.reasons_just_msg(policy_detail.get("reasons"))})
             writer.writerow(row_data)
         return output.getvalue()
 
@@ -387,7 +431,7 @@ class CentrifugePolicyCheck(object):
                 "name": policy_detail.get("name"),
                 "compliant": policy_detail.get("status")
             }
-            final_result.update({"reasons": policy_detail.get("reasons")})
+            final_result.update({"reasons": self.reasons_just_msg(policy_detail.get("reasons"))})
             final_result_dict.get("results").append(final_result)
 
         if "standard" in self.yaml_config:
@@ -429,6 +473,130 @@ class CentrifugePolicyCheck(object):
         json_results = self.build_json()
         with open(report_template, 'r') as f:
             return chevron.render(f, json_results)
+
+    def generate_sarif(self, report_url):
+        # Sarif header
+        sarif = {
+            "version": "2.1.0",
+            "$schema": "http://json.schemastore.org/sarif-2.1.0-rtm.4",
+            "runs": [
+                {
+                    "tool": {
+                        "driver": {
+                            "name": "Binwalk Enterprise",
+                            "informationUri": "https://www.refirmlabs.com",
+                            "rules": [
+                                {
+                                    "id": "security-checklist",
+                                    "shortDescription": {
+                                        "text": "Known malware, exploits or backdoors"
+                                    }
+                                },
+                                {
+                                    "id": "certificate-expired",
+                                    "shortDescription": {
+                                        "text": "Expired certificates"
+                                    }
+                                },
+                                {
+                                    "id": "certificate-expiring",
+                                    "shortDescription": {
+                                        "text": "Certificates expiring within x months by policy"
+                                    }
+                                },
+                                {
+                                    "id": "private-key",
+                                    "shortDescription": {
+                                        "text": "Contains private keys"
+                                    }
+                                },
+                                {
+                                    "id": "binary-hardening",
+                                    "shortDescription": {
+                                        "text": "Compiler binary hardening settings must meet policy"
+                                    }
+                                },
+                                {
+                                    "id": "cvss-score-threshold",
+                                    "shortDescription": {
+                                        "text": "Known CVEs above policy threshold"
+                                    }
+                                },
+                                {
+                                    "id": "cvss-age",
+                                    "shortDescription": {
+                                        "text": "Known CVEs older than policy age"
+                                    }
+                                },
+                                {
+                                    "id": "code-total-flaws",
+                                    "shortDescription": {
+                                        "text": "Potential code flaws (buffer overflow / command injection)"
+                                    }
+                                },
+                                {
+                                    "id": "code-critical-flaws",
+                                    "shortDescription": {
+                                        "text": "Contains critical (emulated) code flaws"
+                                    }
+                                },
+                                {
+                                    "id": "allow-user-accounts",
+                                    "shortDescription": {
+                                        "text": "Contains hard coded user accounts"
+                                    }
+                                },
+                                {
+                                    "id": "weak-user-account-password-algorithm",
+                                    "shortDescription": {
+                                        "text": "User accounts use weak password algorithms"
+                                    }
+                                },
+                                {
+                                    "id": "sbom-prohibited-component",
+                                    "shortDescription": {
+                                        "text": "Contains prohibited SBOM components"
+                                    }
+                                },
+                                {
+                                    "id": "sbom-prohibited-license",
+                                    "shortDescription": {
+                                        "text": "Contains SBOM components with prohibited licenses"
+                                    }
+                                },
+                            ]
+                        }
+                    },
+                    "artifacts": [],
+                    "results": []
+                }
+            ]
+        }
+
+        # Add results
+        results = []
+        for _, policy_detail in POLICY_DETAIL_MAPPING.items():
+            reasons = policy_detail.get("reasons")
+            for reason in reasons:
+                results.append({
+                    "ruleId": reason["rule"],
+                    "level": "error",
+                    "message": {
+                        "text": f'{reason["msg"]} - [details]({report_url})'
+                    },
+                    "locations": [
+                        {
+                            "physicalLocation": {
+                                "artifactLocation": {
+                                    "uri": f'file://{reason["uri"]}'
+                                }
+                            }
+                        }
+                    ]
+                })
+        sarif.get("runs")[0].update({"results": results})
+
+        return json.dumps(sarif, indent=2, sort_keys=False)
 
     def check_rules(self, config_file):
         with open(config_file, 'r') as stream:
