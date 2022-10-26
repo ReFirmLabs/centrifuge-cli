@@ -20,7 +20,7 @@ pyyaml = "^5.3.1"
 chevron = "^0.13.1"
 
 [tool.poetry.dev-dependencies]
-pytest = "^3.0"
+pytest = "^7.0"
 toml = "^0.10.1"
 
 [tool.poetry.scripts]
