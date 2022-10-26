@@ -14,7 +14,7 @@ jobs:
       install:
         - pip install pycodestyle restructuredtext_lint pygments
       script:
-        - pycodestyle --ignore=E501,W504  --show-source $(find centrifuge_cli -name '*.py')
+        - pycodestyle --ignore=E501,W504,E275  --show-source $(find centrifuge_cli -name '*.py')
         - rst-lint README.rst
     - stage: test
       install:
